@@ -5,7 +5,8 @@ import {
     FaReceipt,
     FaShoppingCart,
     FaBalanceScale, // ⚖️ pour unités
-    FaTags,         // 🏷️ pour catégories
+    FaTags, 
+    FaUserFriends,        // 🏷️ pour catégories
   } from "react-icons/fa";
   import { NavLink } from "react-router-dom";
   
@@ -18,7 +19,11 @@ import {
       { to: "/orders", label: "Commandes", icon: <FaShoppingCart /> },
       { to: "/invoices", label: "Bande de Commande", icon: <FaReceipt /> },
       { to: "/units", label: "Gestion des Unités", icon: <FaBalanceScale /> }, // 🆕 Unités
-      { to: "/categories", label: "Gestion des Catégories", icon: <FaTags /> }, // 🆕 Catégories
+      { to: "/categories", label: "Gestion des Catégories", icon: <FaTags /> },
+      { to: "/clients-list", label: "Liste des Clients", icon: <FaUserFriends /> },
+      
+    
+      // 🆕 Catégories
     ];
   
     return (

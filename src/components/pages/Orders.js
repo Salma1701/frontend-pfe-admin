@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { FaClipboardList, FaTrash, FaSearch } from "react-icons/fa";
+import { FaClipboardList, FaTrash, FaSearch, FaEye } from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
 
 const Orders = () => {
   const [orders, setOrders] = useState([]);
   const [search, setSearch] = useState("");
   const [dateFilter, setDateFilter] = useState("");
+  const navigate = useNavigate();
 
   const fetchOrders = async () => {
     const token = localStorage.getItem("token");
@@ -15,7 +17,7 @@ const Orders = () => {
       });
       setOrders(res.data);
     } catch (err) {
-      console.error("Erreur chargement commandes :", err);
+      console.error("Erreur lors du chargement des commandes :", err);
     }
   };
 
@@ -26,7 +28,7 @@ const Orders = () => {
         await axios.delete(`http://localhost:4000/commandes/${id}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
-        fetchOrders();
+        fetchOrders(); // 🔄 Refresh après suppression
       } catch (err) {
         console.error("Erreur suppression commande :", err);
         alert("Erreur : Seul un admin peut supprimer une commande.");
@@ -39,9 +41,7 @@ const Orders = () => {
   }, []);
 
   const filteredOrders = orders.filter((order) => {
-    const matchSearch = order.numero_commande
-      .toLowerCase()
-      .includes(search.toLowerCase());
+    const matchSearch = order.numero_commande?.toLowerCase().includes(search.toLowerCase());
     const matchDate = dateFilter
       ? new Date(order.date_creation).toISOString().slice(0, 10) === dateFilter
       : true;
@@ -76,7 +76,7 @@ const Orders = () => {
         />
       </div>
 
-      {/* Table */}
+      {/* 📋 Table */}
       <div className="bg-white rounded-lg shadow p-6">
         {filteredOrders.length === 0 ? (
           <p className="text-gray-500">Aucune commande trouvée.</p>
@@ -98,13 +98,13 @@ const Orders = () => {
                   <td className="py-3 px-6">{order.id}</td>
                   <td className="py-3 px-6">{order.numero_commande || "—"}</td>
                   <td className="py-3 px-6">
-                    {order.prix_total_ttc
-                      ? parseFloat(order.prix_total_ttc).toFixed(2) + " TND"
+                    {order.prix_total_ttc !== null && order.prix_total_ttc !== undefined
+                      ? Number(order.prix_total_ttc).toFixed(2) + " TND"
                       : "—"}
                   </td>
                   <td className="py-3 px-6">
-                    {order.prix_hors_taxe
-                      ? parseFloat(order.prix_hors_taxe).toFixed(2) + " TND"
+                    {order.prix_hors_taxe !== null && order.prix_hors_taxe !== undefined
+                      ? Number(order.prix_hors_taxe).toFixed(2) + " TND"
                       : "—"}
                   </td>
                   <td className="py-3 px-6">
@@ -112,7 +112,14 @@ const Orders = () => {
                       ? new Date(order.date_creation).toLocaleDateString()
                       : "—"}
                   </td>
-                  <td className="py-3 px-6 text-center">
+                  <td className="py-3 px-6 text-center flex items-center justify-center gap-3">
+                    <button
+                      onClick={() => navigate(`/bande-de-commande/${order.id}`)}
+                      className="text-blue-500 hover:text-blue-700"
+                      title="Voir Bande de Commande"
+                    >
+                      <FaEye />
+                    </button>
                     <button
                       onClick={() => deleteOrder(order.id)}
                       className="text-red-500 hover:text-red-700"
