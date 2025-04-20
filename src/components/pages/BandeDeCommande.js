@@ -51,7 +51,7 @@ const BandeDeCommande = () => {
   const generatePDF = () => {
     const doc = new jsPDF();
     doc.setFontSize(18);
-    doc.text("Bande de Commande", 14, 22);
+    doc.text("Bon de Commande", 14, 22);
 
     doc.setFontSize(12);
     doc.text(`Numéro : ${commande.numeroCommande}`, 14, 32);
@@ -83,7 +83,7 @@ const BandeDeCommande = () => {
   return (
     <div className="p-6 bg-white rounded shadow space-y-6">
       <h2 className="text-2xl font-bold">
-        Bande de Commande - {commande.numeroCommande}
+        Bon de Commande - {commande.numeroCommande}
       </h2>
 
       <div>

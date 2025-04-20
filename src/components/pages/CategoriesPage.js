@@ -9,14 +9,15 @@ const CategoriesPage = () => {
   const [newCategory, setNewCategory] = useState("");
   const [editId, setEditId] = useState(null);
   const [editName, setEditName] = useState("");
-
   const token = localStorage.getItem("token");
+
+  const headers = {
+    headers: { Authorization: `Bearer ${token}` },
+  };
 
   const fetchCategories = async () => {
     try {
-      const res = await axios.get("http://localhost:4000/categories", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await axios.get("http://localhost:4000/categories", headers);
       setCategories(res.data);
     } catch (err) {
       console.error("Erreur chargement catégories :", err);
@@ -27,27 +28,14 @@ const CategoriesPage = () => {
   const addCategory = async () => {
     if (!newCategory.trim()) return;
 
-    if (!token) {
-      toast.error("Vous devez être connecté.");
-      return;
-    }
-
     try {
-      await axios.post(
-        "http://localhost:4000/categories",
-        { nom: newCategory },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      await axios.post("http://localhost:4000/categories", { nom: newCategory }, headers);
       setNewCategory("");
       fetchCategories();
       toast.success("Catégorie ajoutée avec succès !");
     } catch (err) {
       console.error("Erreur ajout catégorie :", err);
-      if (err.response?.status === 403) {
-        toast.error("Accès refusé : vous devez être administrateur.");
-      } else {
-        toast.error("Erreur lors de l'ajout de la catégorie.");
-      }
+      toast.error(err.response?.data?.message || "Erreur lors de l'ajout de la catégorie.");
     }
   };
 
@@ -55,14 +43,12 @@ const CategoriesPage = () => {
     if (!window.confirm("Êtes-vous sûr de vouloir supprimer cette catégorie ?")) return;
 
     try {
-      await axios.delete(`http://localhost:4000/categories/${id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      await axios.delete(`http://localhost:4000/categories/${id}`, headers);
       fetchCategories();
       toast.success("Catégorie supprimée !");
     } catch (err) {
       console.error("Erreur suppression catégorie :", err);
-      toast.error("Erreur lors de la suppression.");
+      toast.error(err.response?.data?.message || "Erreur lors de la suppression.");
     }
   };
 
@@ -70,18 +56,18 @@ const CategoriesPage = () => {
     if (!editName.trim()) return;
 
     try {
-      await axios.put(
-        `http://localhost:4000/categories/${id}`,
-        { nom: editName },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      await axios.patch(`http://localhost:4000/categories/${id}`, { nom: editName }, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        }
+      });
       setEditId(null);
       setEditName("");
       fetchCategories();
       toast.success("Catégorie mise à jour !");
     } catch (err) {
       console.error("Erreur mise à jour catégorie :", err);
-      toast.error("Erreur lors de la mise à jour.");
+      toast.error(err.response?.data?.message || "Erreur lors de la mise à jour.");
     }
   };
 

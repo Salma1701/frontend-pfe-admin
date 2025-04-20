@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
+import axios from "../../api/axios"; // ✅ Ton instance sécurisée
 
 const AddProductForm = ({ onClose }) => {
   const [nom, setNom] = useState('');
@@ -7,24 +7,18 @@ const AddProductForm = ({ onClose }) => {
   const [prix, setPrix] = useState('');
   const [stock, setStock] = useState('');
   const [categorieId, setCategorieId] = useState('');
-  const [uniteId, setUniteId] = useState('');
+  const [uniteNom, setUniteNom] = useState(''); // 🛠️ Change uniteId ➔ uniteNom
   const [images, setImages] = useState([]);
 
   const [categories, setCategories] = useState([]);
   const [unites, setUnites] = useState([]);
 
-  // 🔥 Charger catégories et unités depuis API
   const fetchCategoriesAndUnites = async () => {
-    const token = localStorage.getItem('token');
     try {
-      const resCategories = await axios.get('http://localhost:4000/categories', {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const resCategories = await axios.get('/categories');
       setCategories(resCategories.data);
 
-      const resUnites = await axios.get('http://localhost:4000/produits/unites', {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const resUnites = await axios.get('/unite');
       setUnites(resUnites.data);
 
     } catch (error) {
@@ -38,30 +32,28 @@ const AddProductForm = ({ onClose }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const token = localStorage.getItem('token');
 
     const formData = new FormData();
     formData.append('nom', nom);
     formData.append('description', description);
     formData.append('prix', prix);
     formData.append('stock', stock);
-    formData.append('categorieId', categorieId);
-    formData.append('uniteId', uniteId);
+    formData.append('categorieId', categorieId); // 🔥 backend attend NOM catégorie
+    formData.append('uniteId', uniteNom);  // pas 'unite', pas 'unite_nom', exactement 'uniteId'  // ✅ pas autre chose       // 🔥 backend attend NOM unité (plus ID)
     for (let img of images) {
-      formData.append('images', img);
+      formData.append('images', img); // 🔥 images field
     }
 
     try {
-      await axios.post('http://localhost:4000/produits', formData, {
+      await axios.post('/produits', formData, {
         headers: {
-          Authorization: `Bearer ${token}`,
           'Content-Type': 'multipart/form-data',
         },
       });
-      alert('Produit ajouté avec succès');
+      alert('✅ Produit ajouté avec succès');
       onClose();
     } catch (error) {
-      console.error('Erreur ajout produit :', error);
+      console.error('❌ Erreur ajout produit :', error);
       alert('Erreur lors de l’ajout');
     }
   };
@@ -70,7 +62,7 @@ const AddProductForm = ({ onClose }) => {
     <form onSubmit={handleSubmit} className="flex flex-col gap-4">
       <input
         type="text"
-        placeholder="Nom"
+        placeholder="Designation"
         value={nom}
         onChange={(e) => setNom(e.target.value)}
         className="border rounded px-3 py-2"
@@ -109,26 +101,25 @@ const AddProductForm = ({ onClose }) => {
       >
         <option value="">Choisir une catégorie</option>
         {categories.map((cat) => (
-          <option key={cat.id} value={cat.id}>
+          <option key={cat.id} value={cat.nom}>
             {cat.nom}
           </option>
         ))}
       </select>
 
-      {/* ✅ Select Unités */}
+      {/* ✅ Select Unités - ENVOIE LE NOM */}
       <select
-        value={uniteId}
-        onChange={(e) => setUniteId(e.target.value)}
-        className="border rounded px-3 py-2"
-        required
-      >
-        <option value="">Choisir une unité</option>
-        {unites.map((unit) => (
-          <option key={unit.id} value={unit.id}>
-            {unit.nom}
-          </option>
-        ))}
-      </select>
+  value={uniteNom}
+  onChange={(e) => setUniteNom(e.target.value)}
+  required
+>
+  <option value="">Choisir une unité</option>
+  {unites.map((unit) => (
+    <option key={unit.id} value={unit.nom}>
+      {unit.nom}
+    </option>
+  ))}
+</select>
 
       <input
         type="file"

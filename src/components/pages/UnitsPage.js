@@ -9,7 +9,7 @@ const UnitsPage = () => {
   const fetchUnits = async () => {
     const token = localStorage.getItem("token");
     try {
-      const res = await axios.get("http://localhost:4000/produits/unites", {
+      const res = await axios.get("http://localhost:4000/unite", {
         headers: { Authorization: `Bearer ${token}` },
       });
       setUnits(res.data);

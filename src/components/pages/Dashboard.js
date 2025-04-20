@@ -7,100 +7,110 @@ import axios from "axios";
 Chart.register(CategoryScale, LinearScale, BarElement, ArcElement, LineElement, PointElement, Tooltip, Legend);
 
 const Dashboard = () => {
-  const [stats, setStats] = useState({ commandes: 0, produits: 0, utilisateurs: 0 });
+  const [stats, setStats] = useState({ totalCommandes: 0, totalProduits: 0, totalUtilisateurs: 0 });
+  const [ventesCommercial, setVentesCommercial] = useState([]);
+  const [ventesCategorie, setVentesCategorie] = useState([]);
+  const [ventesMois, setVentesMois] = useState([]);
 
-  const fetchStats = async () => {
+  const fetchData = async () => {
     const token = localStorage.getItem("token");
+    const headers = { Authorization: `Bearer ${token}` };
+
     try {
-      const res = await axios.get("http://localhost:4000/dashboard", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setStats(res.data);
+      const [statsRes, commercialRes, categorieRes, moisRes] = await Promise.all([
+        axios.get("http://localhost:4000/dashboard/stats", { headers }),
+        axios.get("http://localhost:4000/dashboard/ventes-par-commercial", { headers }),
+        axios.get("http://localhost:4000/dashboard/ventes-par-categorie", { headers }),
+        axios.get("http://localhost:4000/dashboard/ventes-par-mois", { headers }),
+      ]);
+      setStats(statsRes.data);
+      setVentesCommercial(commercialRes.data);
+      setVentesCategorie(categorieRes.data);
+      setVentesMois(moisRes.data);
     } catch (error) {
       console.error(error);
     }
   };
 
   useEffect(() => {
-    fetchStats();
+    fetchData();
   }, []);
 
-  const salesData = {
-    labels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun"],
+  const ventesCommercialData = {
+    labels: ventesCommercial.map((v) => v.commercial),
     datasets: [{
-      label: "Ventes (TND)",
-      data: [400, 500, 600, 700, 800, 900],
-      backgroundColor: "#6366F1",
-    }]
+      label: "Ventes par Commercial (TND)",
+      data: ventesCommercial.map((v) => v.total),
+      backgroundColor: "#4F46E5",
+    }],
   };
 
-  const productsData = {
-    labels: ["Électronique", "Vêtements", "Accessoires"],
+  const ventesCategorieData = {
+    labels: ventesCategorie.map((v) => v.categorie),
     datasets: [{
-      data: [12, 19, 9],
-      backgroundColor: ["#34D399", "#60A5FA", "#FBBF24"],
-    }]
+      label: "Produits par Catégorie",
+      data: ventesCategorie.map((v) => v.quantite),
+      backgroundColor: ["#34D399", "#60A5FA", "#FBBF24", "#F472B6"],
+    }],
   };
 
-  const lineData = {
-    labels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun"],
+  const ventesMoisData = {
+    labels: ventesMois.map((v) => v.mois),
     datasets: [{
-      label: "Progression des ventes",
-      data: [300, 400, 500, 700, 800, 1000],
+      label: "Ventes par Mois (TND)",
+      data: ventesMois.map((v) => v.montant),
       borderColor: "#10B981",
       backgroundColor: "#D1FAE5",
       tension: 0.4,
       fill: true,
-    }]
+    }],
   };
 
   return (
-    <div className="p-6">
-      <h2 className="text-3xl font-bold text-gray-800 mb-8">Bienvenue sur votre Dashboard</h2>
+    <div className="p-6 bg-gray-100 min-h-screen">
+      <h1 className="text-3xl font-bold text-gray-800 mb-8">Dashboard Force de Vente</h1>
 
-      {/* Cartes statistiques */}
+      {/* Cartes Statistiques */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-        <div className="bg-white shadow-lg rounded-lg p-6 flex items-center">
-          <FaShoppingCart className="text-indigo-500 text-3xl mr-4" />
-          <div>
-            <h3 className="text-gray-500">Commandes</h3>
-            <p className="text-2xl font-bold">{stats.commandes}</p>
-          </div>
-        </div>
-        <div className="bg-white shadow-lg rounded-lg p-6 flex items-center">
-          <FaBoxOpen className="text-green-500 text-3xl mr-4" />
-          <div>
-            <h3 className="text-gray-500">Produits</h3>
-            <p className="text-2xl font-bold">{stats.produits}</p>
-          </div>
-        </div>
-        <div className="bg-white shadow-lg rounded-lg p-6 flex items-center">
-          <FaUsers className="text-pink-500 text-3xl mr-4" />
-          <div>
-            <h3 className="text-gray-500">Utilisateurs</h3>
-            <p className="text-2xl font-bold">{stats.utilisateurs}</p>
-          </div>
-        </div>
+        <Card icon={<FaShoppingCart className="text-indigo-500 text-3xl" />} title="Commandes" value={stats.totalCommandes} />
+        <Card icon={<FaBoxOpen className="text-green-500 text-3xl" />} title="Produits" value={stats.totalProduits} />
+        <Card icon={<FaUsers className="text-pink-500 text-3xl" />} title="Utilisateurs" value={stats.totalUtilisateurs} />
       </div>
 
       {/* Graphiques */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <div className="bg-white p-6 rounded-lg shadow-lg">
-          <h3 className="text-lg font-bold mb-4 text-gray-700">Ventes par Commercial</h3>
-          <Bar data={salesData} />
-        </div>
-        <div className="bg-white p-6 rounded-lg shadow-lg">
-          <h3 className="text-lg font-bold mb-4 text-gray-700">Produits par Catégorie</h3>
-          <Doughnut data={productsData} />
-        </div>
+        <ChartCard title="Ventes par Commercial">
+          <Bar data={ventesCommercialData} />
+        </ChartCard>
+        <ChartCard title="Produits par Catégorie">
+          <Doughnut data={ventesCategorieData} />
+        </ChartCard>
       </div>
 
-      <div className="mt-8 bg-white p-6 rounded-lg shadow-lg">
-        <h3 className="text-lg font-bold mb-4 text-gray-700">Évolution des ventes</h3>
-        <Line data={lineData} />
+      <div className="mt-10">
+        <ChartCard title="Évolution des Ventes par Mois">
+          <Line data={ventesMoisData} />
+        </ChartCard>
       </div>
     </div>
   );
 };
+
+const Card = ({ icon, title, value }) => (
+  <div className="bg-white p-6 rounded-lg shadow flex items-center">
+    <div className="mr-4">{icon}</div>
+    <div>
+      <h4 className="text-gray-500">{title}</h4>
+      <p className="text-2xl font-bold">{value}</p>
+    </div>
+  </div>
+);
+
+const ChartCard = ({ title, children }) => (
+  <div className="bg-white p-6 rounded-lg shadow">
+    <h3 className="text-lg font-bold mb-4 text-gray-700">{title}</h3>
+    {children}
+  </div>
+);
 
 export default Dashboard;

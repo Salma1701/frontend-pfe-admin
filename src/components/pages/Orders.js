@@ -116,7 +116,7 @@ const Orders = () => {
                     <button
                       onClick={() => navigate(`/bande-de-commande/${order.id}`)}
                       className="text-blue-500 hover:text-blue-700"
-                      title="Voir Bande de Commande"
+                      title="Voir Bon de Commande"
                     >
                       <FaEye />
                     </button>
