@@ -1,145 +1,193 @@
+// ✅ FRONTEND - AdminPromotionsPage.js (React avec Axios + Toast)
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { FaEdit, FaToggleOn, FaToggleOff } from "react-icons/fa";
+import { FaEdit, FaToggleOn, FaToggleOff, FaPercent } from "react-icons/fa";
 import { toast, ToastContainer } from "react-toastify";
-import 'react-toastify/dist/ReactToastify.css';
+import "react-toastify/dist/ReactToastify.css";
 
 const AdminPromotionsPage = () => {
-  const [promos, setPromos] = useState([]);
-  const [form, setForm] = useState({
+  const [promotions, setPromotions] = useState([]);
+  const [editForm, setEditForm] = useState(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [newPromo, setNewPromo] = useState({
     titre: "",
     description: "",
     tauxReduction: 0,
     dateDebut: "",
-    dateFin: ""
+    dateFin: "",
   });
-  const [editingId, setEditingId] = useState(null);
-  const [filter, setFilter] = useState("all");
+
   const token = localStorage.getItem("token");
 
-  const fetchPromos = async () => {
+  const fetchPromotions = async () => {
     try {
       const res = await axios.get("http://localhost:4000/promotions", {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${token}` },
       });
-      setPromos(res.data);
-    } catch (err) {
-      toast.error("Erreur chargement des promotions");
-    }
-  };
-
-  useEffect(() => {
-    fetchPromos();
-  }, []);
-
-  const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-  };
-
-  const handleSubmit = async () => {
-    try {
-      if (editingId) {
-        await axios.patch(`http://localhost:4000/promotions/${editingId}`, form, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        toast.success("Promotion modifiée !");
-        setEditingId(null);
-      } else {
-        await axios.post("http://localhost:4000/promotions", form, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        toast.success("Promotion ajoutée !");
-      }
-      setForm({ titre: "", description: "", tauxReduction: 0, dateDebut: "", dateFin: "" });
-      fetchPromos();
+      setPromotions(res.data);
     } catch {
-      toast.error("Erreur ajout/modification promotion");
+      toast.error("Erreur chargement promotions");
     }
   };
 
-  const toggleStatus = async (id) => {
+  const handleToggleStatus = async (id) => {
     try {
       await axios.patch(`http://localhost:4000/promotions/${id}/status`, {}, {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${token}` },
       });
-      fetchPromos();
+      toast.success("Statut modifié");
+      fetchPromotions();
     } catch {
-      toast.error("Erreur changement de statut");
+      toast.error("Erreur lors du changement de statut");
     }
   };
 
   const handleEdit = (promo) => {
-    setEditingId(promo.id);
-    setForm({
-      titre: promo.titre,
-      description: promo.description,
-      tauxReduction: promo.tauxReduction,
-      dateDebut: promo.dateDebut.split("T")[0],
-      dateFin: promo.dateFin.split("T")[0]
-    });
+    setEditForm(promo);
+    setIsEditing(true);
   };
 
-  const filteredPromos = promos.filter(p => {
-    if (filter === "active") return p.isActive;
-    if (filter === "inactive") return !p.isActive;
-    return true;
-  });
+  const handleChange = (e) => {
+    setEditForm({ ...editForm, [e.target.name]: e.target.value });
+  };
+
+  const handleUpdate = async () => {
+    try {
+      const updatedPromo = {
+        ...editForm,
+        tauxReduction: parseFloat(editForm.tauxReduction),
+        dateDebut: new Date(editForm.dateDebut).toISOString(),
+        dateFin: new Date(editForm.dateFin).toISOString(),
+      };
+      await axios.post(`http://localhost:4000/promotions`, updatedPromo, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+      toast.success("Promotion modifiée");
+      setIsEditing(false);
+      setEditForm(null);
+      fetchPromotions();
+    } catch {
+      toast.error("Erreur modification promotion");
+    }
+  };
+  
+
+  const handleNewPromoChange = (e) => {
+    setNewPromo({ ...newPromo, [e.target.name]: e.target.value });
+  };
+
+ const handleCreate = async () => {
+  try {
+    const payload = {
+      ...newPromo,
+      tauxReduction: parseFloat(newPromo.tauxReduction),
+      dateDebut: new Date(newPromo.dateDebut).toISOString(),
+      dateFin: new Date(newPromo.dateFin).toISOString(),
+    };
+
+    await axios.post(`http://localhost:4000/promotions`, payload, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    });
+
+    toast.success("Promotion ajoutée");
+    setNewPromo({
+      titre: "",
+      description: "",
+      tauxReduction: 0,
+      dateDebut: "",
+      dateFin: "",
+    });
+    fetchPromotions();
+
+  } catch (error) {
+    console.error("Erreur lors de la création de la promotion :", error.response?.data || error.message);
+    toast.error("Erreur lors de la création de la promotion");
+  }
+};
+
+
+  useEffect(() => {
+    if (!token) toast.error("Token manquant. Veuillez vous reconnecter.");
+    else fetchPromotions();
+  }, []);
 
   return (
-    <div className="p-6 text-gray-800 bg-gray-50 min-h-screen">
-      <ToastContainer />
-      <h2 className="text-3xl font-bold mb-6">Gestion des Promotions</h2>
+    <div className="p-6">
+      <ToastContainer position="top-right" autoClose={3000} />
+      <h2 className="text-2xl font-bold mb-4 text-indigo-700 flex items-center gap-2">
+        <FaPercent /> Liste des Promotions
+      </h2>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Formulaire */}
-        <div className="bg-white rounded-lg shadow p-4">
-          <h3 className="text-xl font-semibold mb-4">{editingId ? "Modifier" : "Nouvelle"} Promotion</h3>
-          <div className="space-y-3">
-            <input name="titre" value={form.titre} onChange={handleChange} placeholder="Titre" className="input w-full border p-2 rounded" />
-            <input name="description" value={form.description} onChange={handleChange} placeholder="Description" className="input w-full border p-2 rounded" />
-            <input type="number" name="tauxReduction" value={form.tauxReduction} onChange={handleChange} placeholder="Taux de réduction (%)" className="input w-full border p-2 rounded" />
-            <input type="date" name="dateDebut" value={form.dateDebut} onChange={handleChange} className="input w-full border p-2 rounded" />
-            <input type="date" name="dateFin" value={form.dateFin} onChange={handleChange} className="input w-full border p-2 rounded" />
-            <button onClick={handleSubmit} className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
-              {editingId ? "Mettre à jour" : "Ajouter"}
-            </button>
-          </div>
-        </div>
-
-        {/* Liste */}
-        <div className="bg-white rounded-lg shadow p-4">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-xl font-semibold">Liste des promotions</h3>
-            <select value={filter} onChange={e => setFilter(e.target.value)} className="border p-1 rounded">
-              <option value="all">Toutes</option>
-              <option value="active">Actives</option>
-              <option value="inactive">Inactives</option>
-            </select>
-          </div>
-
-          <div className="divide-y">
-            {filteredPromos.map(p => (
-              <div key={p.id} className="py-3 flex justify-between items-center">
-                <div>
-                  <p className="font-semibold">{p.titre}</p>
-                  <p className="text-sm text-gray-500">{p.description}</p>
-                  <p className="text-sm">Réduction : {p.tauxReduction}%</p>
-                  <p className="text-xs text-gray-400">Du {p.dateDebut.slice(0,10)} au {p.dateFin.slice(0,10)}</p>
-                </div>
-                <div className="flex gap-3">
-                  <button onClick={() => handleEdit(p)} className="text-blue-500 hover:text-blue-700">
-                    <FaEdit />
-                  </button>
-                  <button onClick={() => toggleStatus(p.id)}>
-                    {p.isActive ? <FaToggleOn className="text-green-500" size={20} /> : <FaToggleOff className="text-gray-400" size={20} />}
-                  </button>
-                </div>
-              </div>
-            ))}
-            {filteredPromos.length === 0 && <p className="text-sm text-gray-400">Aucune promotion à afficher.</p>}
-          </div>
-        </div>
+      <div className="mb-6 bg-white shadow p-4 rounded">
+        <h3 className="font-semibold text-lg mb-2">Nouvelle Promotion</h3>
+        <input name="titre" value={newPromo.titre} onChange={handleNewPromoChange} placeholder="Titre" className="border p-2 mb-2 w-full" />
+        <textarea name="description" value={newPromo.description} onChange={handleNewPromoChange} placeholder="Description" className="border p-2 mb-2 w-full" />
+        <input name="tauxReduction" type="number" value={newPromo.tauxReduction} onChange={handleNewPromoChange} className="border p-2 mb-2 w-full" placeholder="Taux de réduction" />
+        <input name="dateDebut" type="date" value={newPromo.dateDebut} onChange={handleNewPromoChange} className="border p-2 mb-2 w-full" />
+        <input name="dateFin" type="date" value={newPromo.dateFin} onChange={handleNewPromoChange} className="border p-2 mb-2 w-full" />
+        <button onClick={handleCreate} className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">Ajouter</button>
       </div>
+
+      <table className="w-full border">
+        <thead className="bg-gray-100">
+          <tr>
+            <th className="p-2">Titre</th>
+            <th className="p-2">Description</th>
+            <th className="p-2">Taux</th>
+            <th className="p-2">Début</th>
+            <th className="p-2">Fin</th>
+            <th className="p-2">Statut</th>
+            <th className="p-2">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {promotions.map((promo) => (
+            <tr key={promo.id} className="border-t">
+              <td className="p-2">{promo.titre}</td>
+              <td className="p-2">{promo.description}</td>
+              <td className="p-2">{promo.tauxReduction}%</td>
+              <td className="p-2">{new Date(promo.dateDebut).toLocaleDateString()}</td>
+              <td className="p-2">{new Date(promo.dateFin).toLocaleDateString()}</td>
+              <td className="p-2">
+                {promo.isActive ? (
+                  <span className="text-green-600 font-semibold">Actif</span>
+                ) : (
+                  <span className="text-red-600 font-semibold">Inactif</span>
+                )}
+              </td>
+              <td className="p-2 flex gap-2">
+                <button onClick={() => handleEdit(promo)} className="text-indigo-600 hover:text-indigo-800">
+                  <FaEdit />
+                </button>
+                <button onClick={() => handleToggleStatus(promo.id)} className={promo.isActive ? "text-red-600" : "text-green-600"}>
+                  {promo.isActive ? <FaToggleOff /> : <FaToggleOn />}
+                </button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+
+      {isEditing && editForm && (
+        <div className="mt-6 bg-white shadow p-4 rounded">
+          <h3 className="font-semibold text-lg mb-2">Modifier Promotion</h3>
+          <input name="titre" value={editForm.titre} onChange={handleChange} className="border p-2 mb-2 w-full" />
+          <textarea name="description" value={editForm.description} onChange={handleChange} className="border p-2 mb-2 w-full" />
+          <input name="tauxReduction" type="number" value={editForm.tauxReduction} onChange={handleChange} className="border p-2 mb-2 w-full" />
+          <input name="dateDebut" type="date" value={editForm.dateDebut.split('T')[0]} onChange={handleChange} className="border p-2 mb-2 w-full" />
+          <input name="dateFin" type="date" value={editForm.dateFin.split('T')[0]} onChange={handleChange} className="border p-2 mb-2 w-full" />
+          <div className="flex justify-end gap-2">
+            <button onClick={() => setIsEditing(false)} className="px-4 py-2 text-gray-600">Annuler</button>
+            <button onClick={handleUpdate} className="px-4 py-2 bg-indigo-600 text-white rounded">Enregistrer</button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

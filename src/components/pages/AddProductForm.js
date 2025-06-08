@@ -1,13 +1,14 @@
 import React, { useEffect, useState } from "react";
-import axios from "../../api/axios"; // ✅ Ton instance sécurisée
+import axios from "../../api/axios"; // ✅ Instance axios
 
 const AddProductForm = ({ onClose }) => {
   const [nom, setNom] = useState('');
   const [description, setDescription] = useState('');
   const [prix, setPrix] = useState('');
   const [stock, setStock] = useState('');
+  const [prixUnitaire, setPrixUnitaire] = useState(''); // ✅ Ajouter prix_unitaire
   const [categorieId, setCategorieId] = useState('');
-  const [uniteNom, setUniteNom] = useState(''); // 🛠️ Change uniteId ➔ uniteNom
+  const [uniteNom, setUniteNom] = useState('');
   const [images, setImages] = useState([]);
 
   const [categories, setCategories] = useState([]);
@@ -20,7 +21,6 @@ const AddProductForm = ({ onClose }) => {
 
       const resUnites = await axios.get('/unite');
       setUnites(resUnites.data);
-
     } catch (error) {
       console.error('Erreur chargement catégories/unités :', error);
     }
@@ -38,10 +38,12 @@ const AddProductForm = ({ onClose }) => {
     formData.append('description', description);
     formData.append('prix', prix);
     formData.append('stock', stock);
-    formData.append('categorieId', categorieId); // 🔥 backend attend NOM catégorie
-    formData.append('uniteId', uniteNom);  // pas 'unite', pas 'unite_nom', exactement 'uniteId'  // ✅ pas autre chose       // 🔥 backend attend NOM unité (plus ID)
+    formData.append('prix_unitaire', prixUnitaire); // ✅ Ajout prix_unitaire ici
+    formData.append('categorieId', categorieId);
+    formData.append('uniteId', uniteNom);
+
     for (let img of images) {
-      formData.append('images', img); // 🔥 images field
+      formData.append('images', img);
     }
 
     try {
@@ -91,6 +93,14 @@ const AddProductForm = ({ onClose }) => {
         className="border rounded px-3 py-2"
         required
       />
+      <input
+        type="number"
+        placeholder="Prix unitaire" // ✅ Champ prix_unitaire visible
+        value={prixUnitaire}
+        onChange={(e) => setPrixUnitaire(e.target.value)}
+        className="border rounded px-3 py-2"
+        required
+      />
 
       {/* ✅ Select Catégories */}
       <select
@@ -107,19 +117,20 @@ const AddProductForm = ({ onClose }) => {
         ))}
       </select>
 
-      {/* ✅ Select Unités - ENVOIE LE NOM */}
+      {/* ✅ Select Unités */}
       <select
-  value={uniteNom}
-  onChange={(e) => setUniteNom(e.target.value)}
-  required
->
-  <option value="">Choisir une unité</option>
-  {unites.map((unit) => (
-    <option key={unit.id} value={unit.nom}>
-      {unit.nom}
-    </option>
-  ))}
-</select>
+        value={uniteNom}
+        onChange={(e) => setUniteNom(e.target.value)}
+        className="border rounded px-3 py-2"
+        required
+      >
+        <option value="">Choisir une unité</option>
+        {unites.map((unit) => (
+          <option key={unit.id} value={unit.nom}>
+            {unit.nom}
+          </option>
+        ))}
+      </select>
 
       <input
         type="file"
@@ -127,6 +138,7 @@ const AddProductForm = ({ onClose }) => {
         onChange={(e) => setImages([...e.target.files])}
         className="border rounded px-3 py-2"
       />
+
       <button
         type="submit"
         className="bg-blue-600 text-white py-2 rounded hover:bg-blue-700"

@@ -6,7 +6,7 @@ import { toast } from "react-toastify";
 const RaisonsVisitePage = () => {
   const [raisons, setRaisons] = useState([]);
   const [newRaison, setNewRaison] = useState("");
-  const [editing, setEditing] = useState(null);
+  const [editingId, setEditingId] = useState(null);
   const [editedValue, setEditedValue] = useState("");
 
   const token = localStorage.getItem("token");
@@ -49,9 +49,8 @@ const RaisonsVisitePage = () => {
         { nom: editedValue },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      
       toast.success("Raison modifiée !");
-      setEditing(null);
+      setEditingId(null);
       fetchRaisons();
     } catch (err) {
       toast.error("Erreur lors de la modification");
@@ -60,7 +59,7 @@ const RaisonsVisitePage = () => {
 
   const toggleStatus = async (id) => {
     try {
-      await axios.patch(
+      await axios.put(
         `http://localhost:4000/raisons/${id}/status`,
         {},
         { headers: { Authorization: `Bearer ${token}` } }
@@ -75,7 +74,6 @@ const RaisonsVisitePage = () => {
     <div className="p-6 text-gray-800 bg-gray-50 min-h-screen">
       <h2 className="text-3xl font-bold mb-6">⚙️ Gestion des Raisons de Visite</h2>
 
-      {/* Formulaire ajout */}
       <div className="flex items-center gap-3 mb-6">
         <input
           type="text"
@@ -92,39 +90,58 @@ const RaisonsVisitePage = () => {
         </button>
       </div>
 
-      {/* Liste des raisons */}
       <div className="bg-white rounded-lg shadow divide-y">
-        {raisons.map((r) => (
+        {raisons.map((raison) => (
           <div
-            key={r.id}
+            key={raison.id}
             className="p-4 flex items-center justify-between hover:bg-gray-50 transition"
           >
-            {editing === r.id ? (
-              <input
-                className="border p-1 rounded w-full mr-3"
-                value={editedValue}
-                onChange={(e) => setEditedValue(e.target.value)}
-                onBlur={() => updateRaison(r.id)}
-              />
-            ) : (
-              <span>{r.nom}</span>
-            )}
+            <div className="flex-1 flex items-center gap-2">
+              {editingId === raison.id ? (
+                <>
+                  <input
+                    className="border p-1 rounded w-full"
+                    value={editedValue}
+                    onChange={(e) => setEditedValue(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        updateRaison(raison.id);
+                      }
+                    }}
+                  />
+                  <button
+                    onClick={() => updateRaison(raison.id)}
+                    className="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700"
+                  >
+                    Enregistrer
+                  </button>
+                  <button
+                    onClick={() => setEditingId(null)}
+                    className="bg-gray-300 text-gray-800 px-3 py-1 rounded hover:bg-gray-400"
+                  >
+                    Annuler
+                  </button>
+                </>
+              ) : (
+                <span>{raison.nom}</span>
+              )}
+            </div>
 
             <div className="flex items-center gap-4">
               <button
                 onClick={() => {
-                  setEditing(r.id);
-                  setEditedValue(r.nom);
+                  setEditingId(raison.id);
+                  setEditedValue(raison.nom);
                 }}
                 className="text-blue-500 hover:text-blue-700"
               >
                 <FaEdit />
               </button>
               <button
-                onClick={() => toggleStatus(r.id)}
-                className={r.isActive ? "text-green-500" : "text-gray-400"}
+                onClick={() => toggleStatus(raison.id)}
+                className={raison.isActive ? "text-green-500" : "text-gray-400"}
               >
-                {r.isActive ? <FaToggleOn size={20} /> : <FaToggleOff size={20} />}
+                {raison.isActive ? <FaToggleOn size={24} /> : <FaToggleOff size={24} />}
               </button>
             </div>
           </div>

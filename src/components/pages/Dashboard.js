@@ -1,13 +1,36 @@
 import React, { useEffect, useState } from "react";
 import { Bar, Doughnut, Line } from "react-chartjs-2";
-import { Chart, CategoryScale, LinearScale, BarElement, ArcElement, LineElement, PointElement, Tooltip, Legend } from "chart.js";
+import {
+  Chart,
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  ArcElement,
+  LineElement,
+  PointElement,
+  Tooltip,
+  Legend,
+} from "chart.js";
 import { FaShoppingCart, FaBoxOpen, FaUsers } from "react-icons/fa";
 import axios from "axios";
 
-Chart.register(CategoryScale, LinearScale, BarElement, ArcElement, LineElement, PointElement, Tooltip, Legend);
+Chart.register(
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  ArcElement,
+  LineElement,
+  PointElement,
+  Tooltip,
+  Legend
+);
 
 const Dashboard = () => {
-  const [stats, setStats] = useState({ totalCommandes: 0, totalProduits: 0, totalUtilisateurs: 0 });
+  const [stats, setStats] = useState({
+    totalCommandes: 0,
+    totalProduits: 0,
+    totalUtilisateurs: 0,
+  });
   const [ventesCommercial, setVentesCommercial] = useState([]);
   const [ventesCategorie, setVentesCategorie] = useState([]);
   const [ventesMois, setVentesMois] = useState([]);
@@ -38,36 +61,42 @@ const Dashboard = () => {
 
   const ventesCommercialData = {
     labels: ventesCommercial.map((v) => v.commercial),
-    datasets: [{
-      label: "Ventes par Commercial (TND)",
-      data: ventesCommercial.map((v) => v.total),
-      backgroundColor: "#4F46E5",
-    }],
+    datasets: [
+      {
+        label: "Ventes par Commercial (TND)",
+        data: ventesCommercial.map((v) => v.total),
+        backgroundColor: "#4F46E5",
+      },
+    ],
   };
 
   const ventesCategorieData = {
     labels: ventesCategorie.map((v) => v.categorie),
-    datasets: [{
-      label: "Produits par Catégorie",
-      data: ventesCategorie.map((v) => v.quantite),
-      backgroundColor: ["#34D399", "#60A5FA", "#FBBF24", "#F472B6"],
-    }],
+    datasets: [
+      {
+        label: "Produits par Catégorie",
+        data: ventesCategorie.map((v) => v.quantite),
+        backgroundColor: ["#34D399", "#60A5FA", "#FBBF24", "#F472B6"],
+      },
+    ],
   };
 
   const ventesMoisData = {
     labels: ventesMois.map((v) => v.mois),
-    datasets: [{
-      label: "Ventes par Mois (TND)",
-      data: ventesMois.map((v) => v.montant),
-      borderColor: "#10B981",
-      backgroundColor: "#D1FAE5",
-      tension: 0.4,
-      fill: true,
-    }],
+    datasets: [
+      {
+        label: "Ventes par Mois (TND)",
+        data: ventesMois.map((v) => v.montant),
+        borderColor: "#10B981",
+        backgroundColor: "#D1FAE5",
+        tension: 0.4,
+        fill: true,
+      },
+    ],
   };
 
   return (
-    <div className="p-6 bg-gray-100 min-h-screen">
+    <div className="p-6 bg-gray-100 h-screen overflow-auto"> {/* ✅ Ajout overflow-auto */}
       <h1 className="text-3xl font-bold text-gray-800 mb-8">Dashboard Force de Vente</h1>
 
       {/* Cartes Statistiques */}
@@ -80,16 +109,22 @@ const Dashboard = () => {
       {/* Graphiques */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <ChartCard title="Ventes par Commercial">
-          <Bar data={ventesCommercialData} />
+          <div style={{ height: "300px" }}> {/* ✅ Hauteur définie */}
+            <Bar data={ventesCommercialData} options={{ maintainAspectRatio: false }} />
+          </div>
         </ChartCard>
         <ChartCard title="Produits par Catégorie">
-          <Doughnut data={ventesCategorieData} />
+          <div style={{ height: "300px" }}> {/* ✅ Hauteur définie */}
+            <Doughnut data={ventesCategorieData} options={{ maintainAspectRatio: false }} />
+          </div>
         </ChartCard>
       </div>
 
       <div className="mt-10">
         <ChartCard title="Évolution des Ventes par Mois">
-          <Line data={ventesMoisData} />
+          <div style={{ height: "350px" }}> {/* ✅ Hauteur définie */}
+            <Line data={ventesMoisData} options={{ maintainAspectRatio: false }} />
+          </div>
         </ChartCard>
       </div>
     </div>
@@ -107,7 +142,7 @@ const Card = ({ icon, title, value }) => (
 );
 
 const ChartCard = ({ title, children }) => (
-  <div className="bg-white p-6 rounded-lg shadow">
+  <div className="bg-white p-6 rounded-lg shadow h-[400px]"> {/* ✅ fixe max height */}
     <h3 className="text-lg font-bold mb-4 text-gray-700">{title}</h3>
     {children}
   </div>

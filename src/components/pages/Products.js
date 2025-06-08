@@ -1,10 +1,8 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import {
-  FaSearch, FaPlus, FaTimes,
-  FaTags, FaBoxOpen, FaThLarge, FaList
-} from "react-icons/fa";
+import { FaSearch, FaPlus, FaTimes, FaTags, FaBoxOpen, FaThLarge, FaList, FaEdit } from "react-icons/fa";
 import AddProductForm from "./AddProductForm";
+import EditProductForm from "./EditProductForm"; // 👈 ajoute ça
 import "react-toastify/dist/ReactToastify.css";
 
 const Products = () => {
@@ -14,8 +12,10 @@ const Products = () => {
   const [selectedCat, setSelectedCat] = useState("");
   const [zoomImage, setZoomImage] = useState(null);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false); // 👈
+  const [selectedProduct, setSelectedProduct] = useState(null); // 👈
   const [viewMode, setViewMode] = useState("grid");
-  const [loadingToggleId, setLoadingToggleId] = useState(null); // ✅ on garde pour loader bouton
+  const [loadingToggleId, setLoadingToggleId] = useState(null);
 
   const fetchProducts = async () => {
     const token = localStorage.getItem("token");
@@ -65,10 +65,8 @@ const Products = () => {
 
   return (
     <div className="p-6 bg-gradient-to-br from-blue-50 via-white to-purple-50 min-h-screen">
-
       {/* 🔎 Header Controls */}
       <div className="flex flex-wrap justify-between items-center gap-4 mb-8">
-
         {/* 🔍 Search */}
         <div className="flex items-center gap-2 bg-white px-4 py-2 rounded shadow w-full sm:w-1/3">
           <FaSearch className="text-gray-400" />
@@ -150,20 +148,27 @@ const Products = () => {
                   </span>
                 </div>
 
-                {/* 💵 Price + Toggle */}
+                {/* 💵 Price + Toggle + Edit */}
                 <div className="flex justify-between items-center mt-auto pt-4">
                   <span className="font-semibold text-indigo-700">
                     {prod.prix} TND
                   </span>
-                  <button
-                    onClick={() => toggleProductStatus(prod.id, prod.isActive)}
-                    disabled={loadingToggleId === prod.id}
-                    className={`px-4 py-1 rounded font-semibold text-white transition ${
-                      prod.isActive ? "bg-green-500 hover:bg-green-600" : "bg-red-500 hover:bg-red-600"
-                    }`}
-                  >
-                    {loadingToggleId === prod.id ? "..." : prod.isActive ? "Actif" : "Inactif"}
-                  </button>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => { setSelectedProduct(prod); setShowEditModal(true); }}
+                      className="px-2 py-1 rounded bg-yellow-400 hover:bg-yellow-500 text-white text-sm flex items-center gap-1"
+                    >
+                      <FaEdit />
+                      Modifier
+                    </button>
+                    <button
+                      onClick={() => toggleProductStatus(prod.id, prod.isActive)}
+                      disabled={loadingToggleId === prod.id}
+                      className={`px-2 py-1 rounded font-semibold text-white text-sm ${prod.isActive ? "bg-green-500 hover:bg-green-600" : "bg-red-500 hover:bg-red-600"}`}
+                    >
+                      {loadingToggleId === prod.id ? "..." : prod.isActive ? "Actif" : "Inactif"}
+                    </button>
+                  </div>
                 </div>
               </div>
 
@@ -200,9 +205,7 @@ const Products = () => {
                     <button
                       onClick={() => toggleProductStatus(prod.id, prod.isActive)}
                       disabled={loadingToggleId === prod.id}
-                      className={`px-4 py-1 rounded font-semibold text-white ${
-                        prod.isActive ? "bg-green-500" : "bg-red-500"
-                      } hover:opacity-80`}
+                      className={`px-4 py-1 rounded font-semibold text-white ${prod.isActive ? "bg-green-500" : "bg-red-500"} hover:opacity-80`}
                     >
                       {loadingToggleId === prod.id ? "..." : prod.isActive ? "Actif" : "Inactif"}
                     </button>
@@ -241,6 +244,26 @@ const Products = () => {
             </button>
             <h2 className="text-2xl font-bold mb-4">Ajouter un produit</h2>
             <AddProductForm onClose={() => { setShowAddModal(false); fetchProducts(); }} />
+          </div>
+        </div>
+      )}
+
+      {/* ✏️ Modal Modifier Produit */}
+      {showEditModal && selectedProduct && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md relative">
+            <button
+              onClick={() => setShowEditModal(false)}
+              className="absolute top-2 right-2 text-gray-600 hover:text-red-500"
+            >
+              <FaTimes size={20} />
+            </button>
+            <h2 className="text-2xl font-bold mb-4">Modifier un produit</h2>
+            <EditProductForm
+              product={selectedProduct}
+              onClose={() => { setShowEditModal(false); setSelectedProduct(null); fetchProducts(); }}
+              refreshProducts={fetchProducts}
+            />
           </div>
         </div>
       )}

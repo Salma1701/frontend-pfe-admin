@@ -31,16 +31,18 @@ const UsersPage = () => {
     }
   };
 
-  const toggleStatus = async (id, current) => {
+  const toggleStatus = async (id) => {
     try {
-      await axios.patch(
+    const response=  await axios.put(
         `http://localhost:4000/users/${id}/status`,
-        { isActive: !current },
+        {},
+      
         {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
       fetchUsers();
+      console.log('statut user updated',response.data.isActive      )
     } catch (err) {
       console.error("Erreur changement statut :", err);
     }
@@ -133,11 +135,11 @@ const UsersPage = () => {
                       type="checkbox"
                       className="sr-only peer"
                       checked={user.isActive}
-                      onChange={() => toggleStatus(user.id, user.isActive)}
+                      onChange={() => toggleStatus(user.id)}
                     />
                     <div className="relative w-14 h-8 bg-gray-300 peer-focus:outline-none rounded-full peer peer-checked:bg-green-500 transition-all duration-300">
                       <div className="absolute left-[2px] top-[2px] bg-white w-7 h-7 rounded-full transition-all duration-300 peer-checked:translate-x-full flex items-center justify-center text-sm">
-                        {user.isActive ? "✅" : "❌"}
+                        {user.isActive===true ? "✅" : "❌"}
                       </div>
                     </div>
                   </label>

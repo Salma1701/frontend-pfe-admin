@@ -20,14 +20,19 @@ import RaisonsVisitePage from "./components/pages/RaisonsVisitePage";
 import AdminPromotionsPage from "./components/pages/AdminPromotionsPage";
 import AdminObjectifsPage from "./components/pages/AdminObjectifsPage";
 import MapCommercials from "./components/pages/MapCommercials";
+import PublicRoute from "./components/pages/publicRoute";
+import Navbar from "./components/Navbar";
+import ReclamationsPage from "./components/pages/ReclamationsPage";
 function LayoutWithSidebar({ children }) {
   return (
     <div className="flex">
       {/* 🧱 Sidebar fixée */}
       <Sidebar />
+      
       {/* 👉 Contenu principal */}
       <div className="flex-1 flex flex-col min-h-screen ml-64 bg-gray-100">
         <Header />
+        <Navbar />
         <main className="flex-1 p-6 overflow-y-auto">{children}</main>
       </div>
     </div>
@@ -41,13 +46,15 @@ function AppContent() {
   if (isLoginPage) {
     return (
       <Routes>
-        <Route path="/login" element={<Login />} />
+        <Route path="/login" element={<PublicRoute> <Login /></PublicRoute>} />
       </Routes>
     );
   }
 
   return (
     <Routes>
+              <Route path="/login" element={<PublicRoute> <Login /></PublicRoute>} />
+
       <Route
         path="/dashboard"
         element={
@@ -209,6 +216,16 @@ function AppContent() {
           </PrivateRoute>
         }
       />
+      <Route
+  path="/reclamations"
+  element={
+    <PrivateRoute>
+      <LayoutWithSidebar>
+        <ReclamationsPage />
+      </LayoutWithSidebar>
+    </PrivateRoute>
+  }
+/>
     </Routes>
   );
 }

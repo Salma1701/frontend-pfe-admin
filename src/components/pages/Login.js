@@ -20,6 +20,8 @@ const Login = () => {
       const token = res.data.access_token;
       if (token) {
         localStorage.setItem("token", token);
+        localStorage.setItem("user", JSON.stringify(res.data));
+
         navigate("/dashboard");
       } else {
         setError("Identifiants invalides");

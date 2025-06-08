@@ -1,5 +1,6 @@
 import Sidebar from "./components/Sidebar";
 import Header from "./components/Header";
+import Navbar from "./Navbar";
 
 const LayoutWithSidebar = ({ children }) => {
   return (
@@ -10,6 +11,7 @@ const LayoutWithSidebar = ({ children }) => {
       {/* Contenu Principal */}
       <div className="flex-1 flex flex-col ml-64">
         <Header />
+        <Navbar />        {/* 🔵 Barre horizontale */}
         <main className="p-6">{children}</main>
       </div>
     </div>

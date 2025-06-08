@@ -56,17 +56,18 @@ const CategoriesPage = () => {
     if (!editName.trim()) return;
 
     try {
-      await axios.patch(`http://localhost:4000/categories/${id}`, { nom: editName }, {
+     const response= await axios.put(`http://localhost:4000/categories/${id}`, { nom: editName }, {
         headers: {
           Authorization: `Bearer ${token}`,
         }
       });
+      console.log('category update',response)
       setEditId(null);
       setEditName("");
       fetchCategories();
       toast.success("Catégorie mise à jour !");
     } catch (err) {
-      console.error("Erreur mise à jour catégorie :", err);
+      console.log("Erreur mise à jour catégorie :", err);
       toast.error(err.response?.data?.message || "Erreur lors de la mise à jour.");
     }
   };
@@ -126,7 +127,7 @@ const CategoriesPage = () => {
                   {editId === cat.id ? (
                     <>
                       <button
-                        onClick={() => updateCategory(cat.id)}
+                        onClick={() =>updateCategory(cat.id)}
                         className="bg-green-500 hover:bg-green-600 text-white p-2 rounded transition"
                         title="Sauvegarder"
                       >
