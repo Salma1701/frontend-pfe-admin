@@ -7,8 +7,7 @@ const EditProductForm = ({ product, onClose, refreshProducts }) => {
   const [prix, setPrix] = useState(product.prix);
   const [stock, setStock] = useState(product.stock);
   const [prixUnitaire, setPrixUnitaire] = useState(product.prix_unitaire);
-  const [categorieId, setCategorieId] = useState(product.categorie?.nom || '');
-  const [uniteId, setUniteId] = useState(product.unite?.nom || '');
+const [categorieId, setCategorieId] = useState(product.categorie?.id || '');  const [uniteId, setUniteId] = useState(product.unite?.nom || '');
   const [images, setImages] = useState([]);
   const [categories, setCategories] = useState([]);
   const [unites, setUnites] = useState([]);
@@ -27,34 +26,43 @@ const EditProductForm = ({ product, onClose, refreshProducts }) => {
     fetchData();
   }, []);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    const formData = new FormData();
-    formData.append('nom', nom);
-    formData.append('description', description);
-    formData.append('prix', prix);
-    formData.append('stock', stock);
-    formData.append('prix_unitaire', prixUnitaire);
-    formData.append('categorieId', categorieId);
-    formData.append('uniteId', uniteId);
-    if (images.length > 0) {
-      for (const img of images) {
-        formData.append('images', img);
-      }
-    }
+// EditProductForm.jsx
 
-    try {
-      await axios.patch(`/produits/${product.id}`, formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
-      alert('✅ Produit modifié avec succès');
-      refreshProducts();
-      onClose();
-    } catch (error) {
-      console.error(error);
-      alert('❌ Erreur modification produit');
-    }
-  };
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  const formData = new FormData();
+  formData.append('nom', nom);
+  formData.append('description', description);
+  formData.append('prix', prix);
+  formData.append('stock', stock);
+  formData.append('prix_unitaire', prixUnitaire);
+  formData.append('categorieId',categorieId);
+  formData.append('uniteId', uniteId);
+  
+  // Append files if they exist
+  if (images.length > 0) {
+    Array.from(images).forEach((img) => {
+      formData.append('images', img);
+    });
+  }
+
+  try {
+    const response = await axios.put(`/produits/${product.id}`, formData, {
+      headers: { 
+        'Content-Type': 'multipart/form-data',
+        'Authorization': `Bearer ${localStorage.getItem('token')}` // If using auth
+      },
+      withCredentials: true,
+    });
+    
+    alert('✅ Produit modifié avec succès');
+    refreshProducts();
+    onClose();
+  } catch (error) {
+    console.error('Error:', error);
+    alert(`❌ Erreur: ${error.response?.data?.message || error.message}`);
+  }
+};
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-4">
@@ -64,12 +72,19 @@ const EditProductForm = ({ product, onClose, refreshProducts }) => {
       <input type="number" value={stock} onChange={(e) => setStock(e.target.value)} className="border rounded px-3 py-2" required />
       <input type="number" value={prixUnitaire} onChange={(e) => setPrixUnitaire(e.target.value)} className="border rounded px-3 py-2" required />
       
-      <select value={categorieId} onChange={(e) => setCategorieId(e.target.value)} className="border rounded px-3 py-2" required>
-        <option value="">Choisir catégorie</option>
-        {categories.map((cat) => (
-          <option key={cat.id} value={cat.nom}>{cat.nom}</option>
-        ))}
-      </select>
+    <select
+  value={categorieId}
+  onChange={(e) => setCategorieId(e.target.value)}
+  className="border rounded px-3 py-2"
+  required
+>
+  <option value="">Choisir catégorie</option>
+  {categories.map((cat) => (
+    <option key={cat.id} value={cat.id}>
+      {cat.nom}
+    </option>
+  ))}
+</select>
 
       <select value={uniteId} onChange={(e) => setUniteId(e.target.value)} className="border rounded px-3 py-2" required>
         <option value="">Choisir unité</option>

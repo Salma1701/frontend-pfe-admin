@@ -8,7 +8,7 @@ const ReclamationsPage = () => {
 
   const fetchReclamations = async () => {
     try {
-      const res = await axios.get("http://localhost:3000/reclamations", {
+      const res = await axios.get("http://localhost:4000/reclamations", {
         headers: {
           Authorization: `Bearer ${token}`,
         },

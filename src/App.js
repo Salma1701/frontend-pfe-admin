@@ -56,7 +56,7 @@ function AppContent() {
               <Route path="/login" element={<PublicRoute> <Login /></PublicRoute>} />
 
       <Route
-        path="/dashboard"
+        path="/"
         element={
           <PrivateRoute>
             <LayoutWithSidebar>
@@ -175,6 +175,7 @@ function AppContent() {
     </PrivateRoute>
   }
 />
+<Route path="/reclamations/:id" element={<ReclamationsPage />} />
 <Route
   path="/objectifs"
   element={

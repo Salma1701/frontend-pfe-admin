@@ -18,7 +18,7 @@ const Sidebar = () => {
   }, [location.pathname]);
 
   const links = [
-    { to: "/dashboard", label: "Dashboard", icon: <FaReceipt /> },
+    { to: "/", label: "Dashboard", icon: <FaReceipt /> },
     { to: "/products", label: "Produits", icon: <FaBoxOpen /> },
     { to: "/users", label: "Utilisateurs", icon: <FaUsers /> },
     

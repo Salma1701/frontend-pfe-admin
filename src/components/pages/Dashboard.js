@@ -81,22 +81,71 @@ const Dashboard = () => {
     ],
   };
 
+  // Configuration améliorée pour les ventes par mois
   const ventesMoisData = {
     labels: ventesMois.map((v) => v.mois),
     datasets: [
       {
         label: "Ventes par Mois (TND)",
         data: ventesMois.map((v) => v.montant),
-        borderColor: "#10B981",
-        backgroundColor: "#D1FAE5",
-        tension: 0.4,
-        fill: true,
+        backgroundColor: "#10B981",
+        borderColor: "#047857",
+        borderWidth: 1,
       },
     ],
   };
 
+  // Options spécifiques pour le graphique à barres des ventes mensuelles
+  const ventesMoisOptions = {
+    maintainAspectRatio: false,
+    responsive: true,
+    scales: {
+      y: {
+        beginAtZero: true,
+        min: 0,
+        max: Math.max(...ventesMois.map(v => v.montant)) * 1.2 || 100, // 20% de marge
+        title: {
+          display: true,
+          text: 'Montant (TND)',
+          font: {
+            size: 14,
+            weight: 'bold'
+          }
+        },
+        ticks: {
+          callback: function(value) {
+            return value + ' TND';
+          },
+          stepSize: 500, // Pas de 500 TND
+        }
+      },
+      x: {
+        title: {
+          display: true,
+          text: 'Mois',
+          font: {
+            size: 14,
+            weight: 'bold'
+          }
+        }
+      }
+    },
+    plugins: {
+      tooltip: {
+        callbacks: {
+          label: function(context) {
+            return `Ventes: ${context.parsed.y.toFixed(2)} TND`;
+          }
+        }
+      },
+      legend: {
+        display: false // Cache la légende pour ce graphique
+      }
+    }
+  };
+
   return (
-    <div className="p-6 bg-gray-100 h-screen overflow-auto"> {/* ✅ Ajout overflow-auto */}
+    <div className="p-6 bg-gray-100 h-screen overflow-auto">
       <h1 className="text-3xl font-bold text-gray-800 mb-8">Dashboard Force de Vente</h1>
 
       {/* Cartes Statistiques */}
@@ -109,21 +158,25 @@ const Dashboard = () => {
       {/* Graphiques */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <ChartCard title="Ventes par Commercial">
-          <div style={{ height: "300px" }}> {/* ✅ Hauteur définie */}
+          <div style={{ height: "300px" }}>
             <Bar data={ventesCommercialData} options={{ maintainAspectRatio: false }} />
           </div>
         </ChartCard>
         <ChartCard title="Produits par Catégorie">
-          <div style={{ height: "300px" }}> {/* ✅ Hauteur définie */}
+          <div style={{ height: "300px" }}>
             <Doughnut data={ventesCategorieData} options={{ maintainAspectRatio: false }} />
           </div>
         </ChartCard>
       </div>
 
       <div className="mt-10">
-        <ChartCard title="Évolution des Ventes par Mois">
-          <div style={{ height: "350px" }}> {/* ✅ Hauteur définie */}
-            <Line data={ventesMoisData} options={{ maintainAspectRatio: false }} />
+        <ChartCard title="Ventes par Mois">
+          <div style={{ height: "350px" }}>
+            {/* Changement pour un graphique à barres */}
+            <Bar 
+              data={ventesMoisData} 
+              options={ventesMoisOptions}
+            />
           </div>
         </ChartCard>
       </div>
@@ -142,7 +195,7 @@ const Card = ({ icon, title, value }) => (
 );
 
 const ChartCard = ({ title, children }) => (
-  <div className="bg-white p-6 rounded-lg shadow h-[400px]"> {/* ✅ fixe max height */}
+  <div className="bg-white p-6 rounded-lg shadow h-[400px]">
     <h3 className="text-lg font-bold mb-4 text-gray-700">{title}</h3>
     {children}
   </div>

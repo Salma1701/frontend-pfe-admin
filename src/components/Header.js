@@ -6,7 +6,6 @@ import axios from "axios";
 const Header = () => {
   const navigate = useNavigate();
   const [reclamations, setReclamations] = useState([]);
-  const [showDropdown, setShowDropdown] = useState(false);
 
   const localStorageData = JSON.parse(localStorage.getItem("user"));
   const token = localStorage.getItem("token");
@@ -46,44 +45,17 @@ const Header = () => {
         {/* 🔔 Notifications */}
         <div className="relative">
           <button
-            className="text-gray-600 hover:text-indigo-600"
+            className="text-gray-600 hover:text-indigo-600 relative"
             title="Réclamations ouvertes"
-            onClick={() => setShowDropdown(!showDropdown)}
+            onClick={() => navigate("/reclamations")}
           >
             <FaBell size={20} />
+            {reclamations.length > 0 && (
+              <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full px-2">
+                {reclamations.length}
+              </span>
+            )}
           </button>
-
-          {reclamations.length > 0 && (
-            <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full px-1">
-              {reclamations.length}
-            </span>
-          )}
-
-          {/* Menu déroulant */}
-          {showDropdown && (
-            <div className="absolute right-0 mt-2 w-80 bg-white border border-gray-200 rounded shadow-md z-50 max-h-80 overflow-y-auto">
-              <div className="p-3 font-semibold border-b">📢 Réclamations ouvertes</div>
-              {reclamations.length === 0 ? (
-                <div className="p-3 text-gray-500">Aucune réclamation</div>
-              ) : (
-                reclamations.map((rec, index) => (
-                  <div
-                    key={index}
-                    className="px-4 py-2 hover:bg-gray-100 cursor-pointer text-sm"
-                    onClick={() => {
-                      navigate("/reclamations");
-                      setShowDropdown(false);
-                    }}
-                  >
-                    <div className="font-semibold">{rec.sujet}</div>
-                    <div className="text-gray-500 text-xs">
-                      Client : {rec.client?.nom ?? "—"}
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-          )}
         </div>
 
         {/* 👤 Nom Admin */}
