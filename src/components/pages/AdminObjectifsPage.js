@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { FaToggleOn, FaToggleOff } from "react-icons/fa";
+import { FaToggleOn, FaToggleOff, FaTimes } from "react-icons/fa";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
@@ -10,17 +10,22 @@ const AdminObjectifsPage = () => {
   const [commerciaux, setCommerciaux] = useState([]);
   const [selectedCategories, setSelectedCategories] = useState([]);
   const [progressData, setProgressData] = useState([]);
+    const [showEditModal, setShowEditModal] = useState(false);
+
 
   const [form, setForm] = useState({
     commercialId: "",
     dateDebut: "",
     dateFin: "",
     mission: "",
-    montantCible: "",
   });
 
-  const [editForm, setEditForm] = useState(null);
-  const [editingId, setEditingId] = useState(null);
+ const [editForm, setEditForm] = useState({
+    prime: "",
+    pourcentageCible: "",
+    mission: ""
+  });
+    const [editingId, setEditingId] = useState(null);
 
   const token = localStorage.getItem("token");
 
@@ -84,9 +89,11 @@ const AdminObjectifsPage = () => {
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
-
+ const handleEditChange = (e) => {
+    setEditForm({ ...editForm, [e.target.name]: e.target.value });
+  };
   const handleSubmit = async () => {
-    if (!form.dateDebut || !form.dateFin || !form.commercialId || !form.montantCible) {
+    if (!form.dateDebut || !form.dateFin || !form.commercialId ) {
       return toast.error("Champs obligatoires manquants.");
     }
 
@@ -103,7 +110,6 @@ const AdminObjectifsPage = () => {
           pourcentageCible: isNaN(rawPourcentage) ? undefined : rawPourcentage,
           categorieProduit: cat,
           mission: form.mission || undefined,
-          montantCible: parseFloat(form.montantCible),
         };
 
         console.log("📦 Payload envoyé :", payload);
@@ -114,7 +120,7 @@ const AdminObjectifsPage = () => {
       }
 
       toast.success("Objectifs créés !");
-      setForm({ commercialId: "", dateDebut: "", dateFin: "", mission: "", montantCible: "" });
+      setForm({ commercialId: "", dateDebut: "", dateFin: "", mission: ""});
       setSelectedCategories([]);
       fetchAll();
     } catch (error) {
@@ -123,13 +129,19 @@ const AdminObjectifsPage = () => {
     }
   };
 
-  const handleEditClick = (obj) => {
+ const handleEditClick = (obj) => {
     setEditingId(obj.id);
     setEditForm({
       prime: obj.prime,
       pourcentageCible: obj.pourcentageCible,
-      mission: obj.mission,
+      mission: obj.mission || "",
     });
+    setShowEditModal(true);
+  };
+
+  const closeEditModal = () => {
+    setShowEditModal(false);
+    setEditingId(null);
   };
 
   const submitEdit = async () => {
@@ -138,7 +150,7 @@ const AdminObjectifsPage = () => {
         headers: { Authorization: `Bearer ${token}` },
       });
       toast.success("Objectif mis à jour !");
-      setEditingId(null);
+      closeEditModal();
       fetchAll();
     } catch {
       toast.error("Erreur lors de la mise à jour.");
@@ -160,7 +172,7 @@ const AdminObjectifsPage = () => {
 
   const toggleStatus = async (id) => {
     try {
-      await axios.patch(`http://localhost:4000/objectifs/${id}/status`, {}, {
+      await axios.put(`http://localhost:4000/objectifs/${id}/status`, {}, {
         headers: { Authorization: `Bearer ${token}` },
       });
       fetchAll();
@@ -172,6 +184,79 @@ const AdminObjectifsPage = () => {
   return (
     <div className="p-8 bg-gradient-to-br from-gray-50 to-blue-50 min-h-screen font-[Inter] text-gray-800">
       <ToastContainer />
+            
+      {/* Modal d'édition */}
+      {showEditModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl p-6 w-full max-w-md mx-4 shadow-2xl">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xl font-bold text-indigo-700">Modifier l'objectif</h3>
+              <button 
+                onClick={closeEditModal}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <FaTimes size={20} />
+              </button>
+            </div>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium mb-1">
+                  Prime (€)
+                </label>
+                <input
+                  type="number"
+                  name="prime"
+                  value={editForm.prime}
+                  onChange={handleEditChange}
+                  className="w-full border px-3 py-2 rounded shadow focus:ring-2 focus:ring-indigo-300"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium mb-1">
+                  Pourcentage cible (%)
+                </label>
+                <input
+                  type="number"
+                  name="pourcentageCible"
+                  value={editForm.pourcentageCible}
+                  onChange={handleEditChange}
+                  className="w-full border px-3 py-2 rounded shadow focus:ring-2 focus:ring-indigo-300"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium mb-1">
+                  Mission
+                </label>
+                <textarea
+                  name="mission"
+                  value={editForm.mission}
+                  onChange={handleEditChange}
+                  className="w-full border px-3 py-2 rounded shadow focus:ring-2 focus:ring-indigo-300"
+                  rows="3"
+                />
+              </div>
+            </div>
+            
+            <div className="flex justify-end gap-3 mt-6">
+              <button
+                onClick={closeEditModal}
+                className="px-4 py-2 border border-gray-300 rounded text-gray-700 hover:bg-gray-100"
+              >
+                Annuler
+              </button>
+              <button
+                onClick={submitEdit}
+                className="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700"
+              >
+                Enregistrer
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       <div className="max-w-6xl mx-auto bg-white shadow-xl rounded-xl p-6">
         <h2 className="text-3xl font-extrabold text-indigo-700 mb-6">
           Gestion des Objectifs Commerciaux
@@ -187,28 +272,31 @@ const AdminObjectifsPage = () => {
           <input type="date" name="dateDebut" value={form.dateDebut} onChange={handleChange} className="border px-4 py-2 rounded shadow" />
           <input type="date" name="dateFin" value={form.dateFin} onChange={handleChange} className="border px-4 py-2 rounded shadow" />
           <input name="mission" value={form.mission} onChange={handleChange} placeholder="Mission" className="border px-4 py-2 rounded shadow" />
-          <input type="number" name="montantCible" value={form.montantCible} onChange={handleChange} placeholder="Montant cible (€)" className="border px-4 py-2 rounded shadow" />
         </div>
 
         <h3 className="text-lg font-semibold mt-4 mb-2">Catégories Produits</h3>
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-          {categories.map((cat) => (
-            <label key={cat.id} className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                value={cat.nom}
-                checked={selectedCategories.includes(cat.nom)}
-                onChange={(e) => {
-                  const updated = e.target.checked
-                    ? [...selectedCategories, cat.nom]
-                    : selectedCategories.filter((c) => c !== cat.nom);
-                  setSelectedCategories(updated);
-                }}
-              />
-              {cat.nom}
-            </label>
-          ))}
-        </div>
+       <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+  {categories.map((cat) => (
+    <label key={cat.id} className="flex items-center gap-2">
+      <input
+        type="checkbox"
+        value={cat.nom}
+        checked={selectedCategories.includes(cat.nom)}
+        onChange={(e) => {
+          if (e.target.checked) {
+            // Sélectionne uniquement cette catégorie, remplace les autres
+            setSelectedCategories([cat.nom]);
+          } else {
+            // Si décochée, vider la sélection
+            setSelectedCategories([]);
+          }
+        }}
+        className="h-4 w-4 text-indigo-600 focus:ring-indigo-500"
+      />
+      {cat.nom}
+    </label>
+  ))}
+</div>
 
         {selectedCategories.map((catNom) => (
           <div key={catNom} className="mt-4 border p-4 rounded bg-gray-50 shadow">
@@ -231,7 +319,12 @@ const AdminObjectifsPage = () => {
           {objectifs.map(obj => (
             <div key={obj.id} className="py-4 border-b flex justify-between items-center">
               <div>
-                <p><strong>{obj.commercial?.nom} {obj.commercial?.prenom}</strong></p>
+                  <p className="font-bold">
+                    {obj.commercial?.nom} {obj.commercial?.prenom} 
+                    <span className={`ml-2 px-2 py-1 text-xs rounded ${obj.isActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
+                      {obj.isActive ? 'Actif' : 'Inactif'}
+                    </span>
+                  </p>
                 <p>Prime : {obj.prime} €</p>
                 {obj.pourcentageCible && <p>Objectif : {obj.pourcentageCible}%</p>}
                 {obj.mission && <p>Mission : {obj.mission}</p>}

@@ -60,7 +60,7 @@ const AdminPromotionsPage = () => {
         dateDebut: new Date(editForm.dateDebut).toISOString(),
         dateFin: new Date(editForm.dateFin).toISOString(),
       };
-      await axios.post(`http://localhost:4000/promotions`, updatedPromo, {
+      await axios.put(`http://localhost:4000/promotions`, updatedPromo, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
