@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useParams } from "react-router-dom";
 import jsPDF from "jspdf";
-import "jspdf-autotable";
+import autoTable from "jspdf-autotable";
 
 const BandeDeCommande = () => {
   const { id } = useParams();
@@ -15,30 +15,20 @@ const BandeDeCommande = () => {
   const fetchCommande = async () => {
     const token = localStorage.getItem("token");
     try {
-      const res = await axios.get(
-        `http://localhost:4000/commandes/bande/${id}`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+      const res = await axios.get(`http://localhost:4000/commandes/bande/${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       setCommande(res.data);
-      
-      // Mise à jour des produits avec les données fraîches
       const newProduits = res.data.produits.map((p) => ({
         idLigneCommande: p.id,
         nomProduit: p.nomProduit,
         quantite: p.quantite,
-        prixUnitaire: parseFloat(p.prixUnitaire), // Convertir en nombre
+        prixUnitaire: parseFloat(p.prixUnitaire),
       }));
-      
       setModifiedProduits(newProduits);
-      
-      // Calcul immédiat des totaux avec les nouvelles données
-      const ht = newProduits.reduce(
-        (sum, p) => sum + p.quantite * p.prixUnitaire,
-        0
-      );
-      const ttc = ht * 1.19; // TVA 19%
+
+      const ht = newProduits.reduce((sum, p) => sum + p.quantite * p.prixUnitaire, 0);
+      const ttc = ht * 1.19;
       setTotalHT(ht);
       setTotalTTC(ttc);
     } catch (error) {
@@ -51,12 +41,8 @@ const BandeDeCommande = () => {
     if (id) fetchCommande();
   }, [id]);
 
-  // Effet pour recalculer les totaux quand les produits changent
   useEffect(() => {
-    const ht = modifiedProduits.reduce(
-      (sum, p) => sum + p.quantite * p.prixUnitaire,
-      0
-    );
+    const ht = modifiedProduits.reduce((sum, p) => sum + p.quantite * p.prixUnitaire, 0);
     const ttc = ht * 1.19;
     setTotalHT(ht);
     setTotalTTC(ttc);
@@ -74,121 +60,88 @@ const BandeDeCommande = () => {
     setModifiedProduits(newProduits);
   };
 
-const saveModifications = async () => {
-  const token = localStorage.getItem("token");
-
-  try {
-    // Vérification renforcée des données
-    for (const p of modifiedProduits) {
-      if (p.prixUnitaire === "" || p.prixUnitaire === null || p.prixUnitaire === undefined) {
-        alert(`Prix unitaire manquant pour: ${p.nomProduit}`);
-        return;
-      }
-      
-      if (isNaN(Number(p.prixUnitaire))) {
-        alert(`Prix unitaire invalide pour: ${p.nomProduit}`);
-        return;
-      }
-    }
-
-    // Envoi des données avec le bon format
-    for (const p of modifiedProduits) {
-      await axios.put(
-        `http://localhost:4000/lignes-commande/${p.idLigneCommande}`,
-        {
-          quantite: Number(p.quantite), // Conversion numérique
-          prix_unitaire: Number(p.prixUnitaire) // snake_case + conversion
-        },
-        {
-          headers: { Authorization: `Bearer ${token}` },
+  const saveModifications = async () => {
+    const token = localStorage.getItem("token");
+    try {
+      for (const p of modifiedProduits) {
+        if (!p.prixUnitaire || isNaN(Number(p.prixUnitaire))) {
+          alert(`Prix unitaire invalide pour: ${p.nomProduit}`);
+          return;
         }
-      );
+      }
+      for (const p of modifiedProduits) {
+        await axios.put(
+          `http://localhost:4000/lignes-commande/${p.idLigneCommande}`,
+          {
+            quantite: Number(p.quantite),
+            prix_unitaire: Number(p.prixUnitaire),
+          },
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+      }
+      setIsEditing(false);
+      setTimeout(() => fetchCommande(), 500);
+      alert("Modifications enregistrées ✅");
+    } catch (error) {
+      console.error("Erreur lors de l'enregistrement:", error);
+      alert(`Erreur: ${error.response?.data?.message || error.message}`);
     }
-
-    setIsEditing(false);
-    setTimeout(() => fetchCommande(), 500);
-    alert("Modifications enregistrées ✅");
-  } catch (error) {
-    console.error("Erreur lors de l'enregistrement:", error);
-    
-    // Affichage détaillé de l'erreur backend
-    const errorMessage = error.response?.data?.message || error.message;
-    alert(`Erreur: ${errorMessage}`);
-  }
-};
-
+  };
 
   const handleValider = async () => {
     try {
       const token = localStorage.getItem("token");
       await saveModifications();
-      
       await axios.put(
         `http://localhost:4000/commandes/valider/${id}`,
         {},
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
+        { headers: { Authorization: `Bearer ${token}` } }
       );
-      
       alert("Commande validée avec succès ✅");
       fetchCommande();
     } catch (err) {
-      console.error("Erreur de validation:", err.response?.data || err.message);
+      console.error("Erreur de validation:", err);
       alert("Erreur lors de la validation 🚫");
     }
   };
 
   const generatePDF = () => {
     if (!commande) return;
-    
+
     const doc = new jsPDF();
     doc.setFontSize(18);
     doc.text("Bon de Commande", 14, 22);
     doc.setFontSize(12);
     doc.text(`Numéro : ${commande.numeroCommande}`, 14, 32);
-    doc.text(
-      `Commercial : ${commande.commercial.prenom} ${commande.commercial.nom}`,
-      14,
-      40
-    );
+    doc.text(`Commercial : ${commande.commercial.prenom} ${commande.commercial.nom}`, 14, 40);
     doc.text(`Email : ${commande.commercial.email}`, 14, 48);
-    doc.text(
-      `Date : ${new Date(commande.date).toLocaleDateString()}`,
-      14,
-      56
-    );
+    doc.text(`Client : ${commande.client.prenom} ${commande.client.nom}`, 14, 56);
+    doc.text(`Code fiscal : ${commande.client.code_fiscal}`, 14, 64);
+    doc.text(`Date : ${new Date(commande.date).toLocaleDateString()}`, 14, 72);
 
     const produits = modifiedProduits.map((p) => [
       p.nomProduit,
       p.quantite,
-      `${Number(p.prixUnitaire).toFixed(2)} TND`,
-      `${(p.prixUnitaire * p.quantite).toFixed(2)} TND`,
+      `${Number(p.prixUnitaire).toFixed(2)} €`,
+      `${(p.prixUnitaire * p.quantite).toFixed(2)} €`,
     ]);
 
-    doc.autoTable({
-      startY: 65,
+    autoTable(doc, {
+      startY: 80,
       head: [["Produit", "Quantité", "Prix Unitaire", "Total"]],
       body: produits,
     });
 
-    const finalY = doc.lastAutoTable.finalY || 65;
-    doc.text(
-      `Total HT : ${totalHT.toFixed(2)} TND`,
-      14,
-      finalY + 10
-    );
-    doc.text(
-      `Total TTC : ${totalTTC.toFixed(2)} TND`,
-      14,
-      finalY + 20
-    );
-    
+    const finalY = doc.lastAutoTable ? doc.lastAutoTable.finalY : 80;
+    doc.text(`Total HT : ${totalHT.toFixed(2)} €`, 14, finalY + 10);
+    doc.text(`Total TTC : ${totalTTC.toFixed(2)} €`, 14, finalY + 20);
+
     doc.save(`Bande_Commande_${commande.numeroCommande}.pdf`);
   };
 
-  if (!commande)
-    return <div className="p-10 text-center">Chargement...</div>;
+  if (!commande) return <div className="p-10 text-center">Chargement...</div>;
 
   return (
     <div className="p-8 bg-gradient-to-br from-gray-50 to-blue-50 min-h-screen font-[Inter]">
@@ -206,10 +159,14 @@ const saveModifications = async () => {
             <strong>Email :</strong> {commande.commercial?.email}
           </p>
           <p>
-            <strong>Date :</strong>{" "}
-            {new Date(commande.date).toLocaleDateString()}
+            <strong>Client :</strong> {commande.client?.prenom} {commande.client?.nom}
           </p>
-       
+          <p>
+            <strong>Code fiscal :</strong> {commande.client?.code_fiscal}
+          </p>
+          <p>
+            <strong>Date :</strong> {new Date(commande.date).toLocaleDateString()}
+          </p>
         </div>
 
         <table className="w-full bg-white border rounded overflow-hidden">
@@ -244,9 +201,9 @@ const saveModifications = async () => {
                 <td className="py-2 px-4">
                   {isEditing ? (
                     <input
-                   type="number"
-                    min="0.01"
-                    step="0.01"
+                      type="number"
+                      min="0.01"
+                      step="0.01"
                       value={produit.prixUnitaire}
                       onChange={(e) =>
                         handlePrixUnitaireChange(index, e.target.value)
@@ -254,11 +211,11 @@ const saveModifications = async () => {
                       className="border px-2 py-1 rounded w-24 text-center"
                     />
                   ) : (
-                    `${Number(produit.prixUnitaire).toFixed(2)} TND`
+                    `${Number(produit.prixUnitaire).toFixed(2)} €`
                   )}
                 </td>
                 <td className="py-2 px-4">
-                  {(produit.quantite * produit.prixUnitaire).toFixed(2)} TND
+                  {(produit.quantite * produit.prixUnitaire).toFixed(2)} €
                 </td>
               </tr>
             ))}
@@ -268,10 +225,10 @@ const saveModifications = async () => {
         <div className="flex justify-between items-center mt-4">
           <div className="text-right text-indigo-800 space-y-1">
             <p>
-              <strong>Total HT :</strong> {totalHT.toFixed(2)} TND
+              <strong>Total HT :</strong> {totalHT.toFixed(2)} €
             </p>
             <p>
-              <strong>Total TTC :</strong> {totalTTC.toFixed(2)} TND
+              <strong>Total TTC :</strong> {totalTTC.toFixed(2)} €
             </p>
           </div>
           <div className="space-x-4 flex flex-wrap gap-2">

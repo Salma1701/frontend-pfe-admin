@@ -29,6 +29,7 @@ const Sidebar = () => {
     { to: "/clients-list", label: "Liste des Clients", icon: <FaUserFriends /> },
     { to: "/promotions", label: "Promotions", icon: <FaTags /> },
     { to: "/objectifs", label: "Objectifs commerciaux", icon: <FaBalanceScale /> },
+    { to: "/satisfaction", label: "Enquêtes Satisfaction", icon: <FaReceipt /> },
     { to: "/map-commercials", label: "Carte Commerciaux", icon: <FaTruck /> },
   
   ];

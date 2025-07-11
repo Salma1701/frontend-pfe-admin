@@ -63,7 +63,7 @@ const Dashboard = () => {
     labels: ventesCommercial.map((v) => v.commercial),
     datasets: [
       {
-        label: "Ventes par Commercial (TND)",
+        label: "Ventes par Commercial (euro)",
         data: ventesCommercial.map((v) => v.total),
         backgroundColor: "#4F46E5",
       },
@@ -86,7 +86,7 @@ const Dashboard = () => {
     labels: ventesMois.map((v) => v.mois),
     datasets: [
       {
-        label: "Ventes par Mois (TND)",
+        label: "Ventes par Mois (euro)",
         data: ventesMois.map((v) => v.montant),
         backgroundColor: "#10B981",
         borderColor: "#047857",
@@ -106,7 +106,7 @@ const Dashboard = () => {
         max: Math.max(...ventesMois.map(v => v.montant)) * 1.2 || 100, // 20% de marge
         title: {
           display: true,
-          text: 'Montant (TND)',
+          text: 'Montant (euro)',
           font: {
             size: 14,
             weight: 'bold'
@@ -114,9 +114,9 @@ const Dashboard = () => {
         },
         ticks: {
           callback: function(value) {
-            return value + ' TND';
+            return value + ' euro';
           },
-          stepSize: 500, // Pas de 500 TND
+          stepSize: 500, // Pas de 500 euro
         }
       },
       x: {
@@ -134,7 +134,7 @@ const Dashboard = () => {
       tooltip: {
         callbacks: {
           label: function(context) {
-            return `Ventes: ${context.parsed.y.toFixed(2)} TND`;
+            return `Ventes: ${context.parsed.y.toFixed(2)} euro`;
           }
         }
       },

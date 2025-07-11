@@ -53,14 +53,16 @@ const InvoicesPage = () => {
                     </span>
                   </td>
                   <td className="py-3 px-6">
-                    {new Date(commande.date_creation).toLocaleDateString()}
+                  {commande.date_validation
+                  ? new Date(commande.date_validation).toLocaleDateString()
+                  : "—"}
                   </td>
                   <td className="py-3 px-6">
-                    {Number(commande.prix_total_ttc).toFixed(2)} TND
+                    {Number(commande.prix_total_ttc).toFixed(2)} euro
                   </td>
                   <td className="py-3 px-6 text-center">
                     <Link
-                      to={`/bande-de-commande/${commande.id}`}
+                      to={`/bon-de-commande/${commande.id}`}
                       className="text-indigo-600 hover:underline font-semibold"
                     >
                       Voir

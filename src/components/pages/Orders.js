@@ -108,12 +108,12 @@ const OrdersPage = () => {
                   </td>
                   <td className="py-3 px-6">
                     {commande.prix_total_ttc
-                      ? `${Number(commande.prix_total_ttc).toFixed(2)} TND`
+                      ? `${Number(commande.prix_total_ttc).toFixed(2)} euro`
                       : "—"}
                   </td>
                   <td className="py-3 px-6">
                     {commande.prix_hors_taxe
-                      ? `${Number(commande.prix_hors_taxe).toFixed(2)} TND`
+                      ? `${Number(commande.prix_hors_taxe).toFixed(2)} euro`
                       : "—"}
                   </td>
                   <td className="py-3 px-6">

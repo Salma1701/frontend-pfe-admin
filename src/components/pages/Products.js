@@ -36,7 +36,7 @@ const Products = () => {
       setCategories(uniqueCats);
     } catch (err) {
       console.error("Erreur chargement produits :", err);
-    }
+    } 
   };
 
   const toggleProductStatus = async (id, currentStatus) => {
@@ -176,9 +176,9 @@ const Products = () => {
                     </span>
                   </div>
                   <div className="flex justify-between items-center pt-2">
-                    <span className="font-semibold text-indigo-700">
-                      {prod.prix} TND
-                    </span>
+                   <span className="font-semibold text-indigo-700">
+                  {Number(prod.prix).toFixed(2)}€
+                  </span>
                     <div className="flex gap-2">
                       <button
                         onClick={() => {
@@ -239,7 +239,7 @@ const Products = () => {
                     <td className="py-3 px-4">{prod.nom}</td>
                     <td className="py-3 px-4">{prod.categorie?.nom || "—"}</td>
                     <td className="py-3 px-4">{prod.unite?.nom || "—"}</td>
-                    <td className="py-3 px-4">{prod.prix} TND</td>
+                    <td className="py-3 px-4">{Number(prod.prix).toFixed(2)} €</td>
                     <td className="py-3 px-4 text-center">
                       <button
                         onClick={() =>

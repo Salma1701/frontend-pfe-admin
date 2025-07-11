@@ -23,8 +23,8 @@ const ReclamationsPage = () => {
 
   const updateStatus = async (id, newStatus) => {
     try {
-      await axios.patch(
-        `http://localhost:3000/reclamations/${id}/status`,
+      await axios.put(
+        `http://localhost:4000/reclamations/${id}/status`,
         { status: newStatus },
         {
           headers: {

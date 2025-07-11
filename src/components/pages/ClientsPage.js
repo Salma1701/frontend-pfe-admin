@@ -75,6 +75,7 @@ const ClientsPage = () => {
       email: client.email,
       telephone: client.telephone,
       adresse: client.adresse,
+      codeFiscale: client.codeFiscale || "",
     });
     setEditModalOpen(true);
   };
@@ -141,6 +142,7 @@ const ClientsPage = () => {
                   <th className="px-6 py-3 font-semibold text-left">Nom</th>
                   <th className="px-6 py-3 font-semibold text-left">Email</th>
                   <th className="px-6 py-3 font-semibold text-left">Téléphone</th>
+                  <th className="px-6 py-3 font-semibold text-left">Code fiscal</th>
                   <th className="px-6 py-3 font-semibold text-left">Adresse</th>
                   <th className="px-6 py-3 font-semibold text-left">Commercial</th>
                   <th className="px-6 py-3 font-semibold text-left">Statut</th>
@@ -153,6 +155,7 @@ const ClientsPage = () => {
                     <td className="px-6 py-4 font-medium capitalize">{client.nom} {client.prenom}</td>
                     <td className="px-6 py-4">{client.email}</td>
                     <td className="px-6 py-4">{client.telephone}</td>
+                    <td className="px-6 py-4">{client.codeFiscale || "—"}</td>
                     <td className="px-6 py-4">{client.adresse}</td>
                     <td className="px-6 py-4">
                       {client.commercial
@@ -197,6 +200,13 @@ const ClientsPage = () => {
                 <input name="prenom" value={editForm.prenom} onChange={handleEditChange} className="w-full p-2 border rounded" placeholder="Prénom" />
                 <input name="email" value={editForm.email} onChange={handleEditChange} className="w-full p-2 border rounded" placeholder="Email" />
                 <input name="telephone" value={editForm.telephone} onChange={handleEditChange} className="w-full p-2 border rounded" placeholder="Téléphone" />
+                <input
+                  name="codeFiscale"
+                  value={editForm.codeFiscale || ""}
+                  onChange={handleEditChange}
+                  className="w-full p-2 border rounded"
+                  placeholder="Code fiscal"
+                />
                 <input name="adresse" value={editForm.adresse} onChange={handleEditChange} className="w-full p-2 border rounded" placeholder="Adresse" />
               </div>
               <div className="flex justify-end gap-2">
