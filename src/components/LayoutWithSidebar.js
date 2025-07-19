@@ -11,7 +11,7 @@ const LayoutWithSidebar = ({ children }) => {
       {/* Contenu Principal */}
       <div className="flex-1 flex flex-col ml-64">
         <Header />
-        <Navbar />        {/* 🔵 Barre horizontale */}
+        <Navbar />        {/*  Barre horizontale */}
         <main className="p-6">{children}</main>
       </div>
     </div>

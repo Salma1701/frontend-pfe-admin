@@ -26,6 +26,8 @@ import AdminSatisfactionPage from "./components/pages/AdminSatisfactionPage";
 import BonDeCommandeView from "./components/pages/BonDeCommandeView";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import ResetPassword from "./components/pages/ResetPassword";
+import ProductDetails from "./components/pages/ProductDetails";
 
 function LayoutWithSidebar({ children }) {
   return (
@@ -57,6 +59,7 @@ function AppContent() {
       <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
       <Route path="/" element={<PrivateRoute><LayoutWithSidebar><Dashboard /></LayoutWithSidebar></PrivateRoute>} />
       <Route path="/products" element={<PrivateRoute><LayoutWithSidebar><Products /></LayoutWithSidebar></PrivateRoute>} />
+     
       <Route path="/units" element={<PrivateRoute><LayoutWithSidebar><UnitsPage /></LayoutWithSidebar></PrivateRoute>} />
       <Route path="/categories" element={<PrivateRoute><LayoutWithSidebar><CategoriesPage /></LayoutWithSidebar></PrivateRoute>} />
       <Route path="/clients-list" element={<PrivateRoute><LayoutWithSidebar><ClientsPage /></LayoutWithSidebar></PrivateRoute>} />
@@ -75,6 +78,9 @@ function AppContent() {
       <Route path="/bon-de-commande/:id" element={<PrivateRoute><LayoutWithSidebar><BonDeCommandeView /></LayoutWithSidebar></PrivateRoute>} />
       <Route path="/suppliers" element={<PrivateRoute><LayoutWithSidebar><Suppliers /></LayoutWithSidebar></PrivateRoute>} />
       <Route path="/reclamations" element={<PrivateRoute><LayoutWithSidebar><ReclamationsPage /></LayoutWithSidebar></PrivateRoute>} />
+       <Route 
+       path="/reset-password" element={<ResetPassword />} 
+       /> 
     </Routes>
   );
 }

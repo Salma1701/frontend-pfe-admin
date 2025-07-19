@@ -39,7 +39,7 @@ const Login = () => {
         {/* Logo et Titre */}
         <div className="flex flex-col items-center mb-6">
   <img
-    src="/bg-preview.png"
+    src="/bg-preview.png" 
     alt="Logo"
     className="h-24 w-24 object-contain mb-2 shadow-md rounded-full"  // 👈 Taille 24 et effet rond avec shadow
   />

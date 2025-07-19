@@ -1,25 +1,28 @@
 // src/pages/UsersPage.jsx
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { FaUserTie, FaUserPlus, FaPen } from "react-icons/fa";
+import {
+  FaUserTie, FaUserPlus, FaPen,
+  FaDownload, FaEye, FaEyeSlash
+} from "react-icons/fa";
 import { toast } from "react-toastify";
+import Papa from "papaparse";
 
 const UsersPage = () => {
   const [users, setUsers] = useState([]);
   const [roleFilter, setRoleFilter] = useState("all");
+  const [search, setSearch] = useState("");
   const [showModal, setShowModal] = useState(false);
   const [editMode, setEditMode] = useState(false);
   const [editUserId, setEditUserId] = useState(null);
   const [showPassword, setShowPassword] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
+
   const [form, setForm] = useState({
-    nom: "",
-    prenom: "",
-    email: "",
-    password: "",
-    tel: "",
-    adresse: "",
-    role: "commercial",
+    nom: "", prenom: "", email: "", password: "",
+    tel: "", adresse: "", role: "commercial",
   });
 
   const token = localStorage.getItem("token");
@@ -36,6 +39,20 @@ const UsersPage = () => {
     }
   };
 
+  useEffect(() => {
+    fetchUsers();
+  }, [roleFilter]);
+
+  const filteredUsers = users.filter((user) =>
+    `${user.nom} ${user.prenom}`.toLowerCase().includes(search.toLowerCase())
+  );
+
+  const totalPages = Math.ceil(filteredUsers.length / itemsPerPage);
+  const paginatedUsers = filteredUsers.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
   const toggleStatus = async (id) => {
     try {
       const user = users.find((u) => u.id === id);
@@ -43,39 +60,44 @@ const UsersPage = () => {
       await axios.put(
         `http://localhost:4000/users/${id}/status`,
         { isActive: newStatus },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        }
+        { headers: { Authorization: `Bearer ${token}` } }
       );
-      setUsers(users.map((u) => (u.id === id ? { ...u, isActive: newStatus } : u)));
+      setUsers(users.map((u) => u.id === id ? { ...u, isActive: newStatus } : u));
     } catch {
       toast.error("Erreur lors de la mise à jour du statut.");
     }
   };
 
+  const exportCSV = () => {
+    const csv = Papa.unparse(users);
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", "utilisateurs.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   const openEditModal = (user) => {
     setEditMode(true);
     setEditUserId(user.id);
-    setForm({
-      nom: user.nom,
-      prenom: user.prenom,
-      email: user.email,
-      password: "",
-      tel: user.tel,
-      adresse: user.adresse || "",
-      role: user.role,
-    });
+    setForm({ ...user, password: "" });
     setErrorMessage("");
     setShowModal(true);
   };
 
+  const isValidFrenchPhoneNumber = (number) => {
+    const cleaned = number.replace(/\s+/g, '');
+    const regex = /^(?:(?:\+33)|(?:0))([67]\d{8})$/;
+    return regex.test(cleaned);
+  };
+
   const handleSubmitUser = async () => {
     const { nom, prenom, email, password, tel, adresse, role } = form;
-    if (!nom || !prenom || !email || (!editMode && !password) || !tel || !adresse) {
-      setErrorMessage("❌ Veuillez remplir tous les champs.");
+    if (!isValidFrenchPhoneNumber(tel)) {
+      setErrorMessage("❌ Numéro de téléphone invalide.");
       return;
     }
 
@@ -83,16 +105,14 @@ const UsersPage = () => {
       if (editMode) {
         await axios.put(
           `http://localhost:4000/users/${editUserId}`,
-          { nom, prenom, email, tel, adresse, role },
+          { nom, prenom, email, tel, adresse },
           { headers: { Authorization: `Bearer ${token}` } }
         );
         toast.success("✅ Utilisateur modifié !");
       } else {
-        const endpoint =
-          role === "admin"
-            ? "http://localhost:4000/users/create-admin"
-            : "http://localhost:4000/users/create-commercial";
-
+        const endpoint = role === "admin"
+          ? "http://localhost:4000/users/create-admin"
+          : "http://localhost:4000/users/create-commercial";
         await axios.post(endpoint, { nom, prenom, email, password, tel, adresse }, {
           headers: { Authorization: `Bearer ${token}` },
         });
@@ -102,18 +122,12 @@ const UsersPage = () => {
       setShowModal(false);
       setForm({ nom: "", prenom: "", email: "", password: "", tel: "", adresse: "", role: "commercial" });
       setEditMode(false);
-      setErrorMessage("");
       fetchUsers();
     } catch (err) {
       const res = err.response?.data;
       const message = res?.message;
-
       if (typeof message === "string") {
-        if (message.includes("Email déjà utilisé")) {
-          setErrorMessage("❌ Cet email est déjà utilisé.");
-        } else {
-          setErrorMessage("❌ " + message);
-        }
+        setErrorMessage("❌ " + message);
       } else if (Array.isArray(message)) {
         setErrorMessage("❌ " + message.join("\n"));
       } else {
@@ -122,10 +136,6 @@ const UsersPage = () => {
     }
   };
 
-  useEffect(() => {
-    fetchUsers();
-  }, [roleFilter]);
-
   return (
     <div className="p-8 bg-gradient-to-br from-gray-50 to-blue-50 min-h-screen font-[Inter]">
       <div className="max-w-6xl mx-auto bg-white shadow-xl rounded-xl p-6">
@@ -133,175 +143,194 @@ const UsersPage = () => {
           <FaUserTie /> Liste des Utilisateurs
         </h2>
 
-        <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-6">
-          <div className="w-full md:w-1/3">
-            <label className="block text-sm font-semibold text-gray-700 mb-1">Filtrer par rôle :</label>
+        <div className="flex flex-wrap justify-between items-center gap-4 mb-4">
+          <div className="flex gap-2">
             <select
               value={roleFilter}
               onChange={(e) => setRoleFilter(e.target.value)}
-              className="w-full border px-3 py-2 rounded shadow-sm"
+              className="border p-2 rounded"
             >
               <option value="all">Tous</option>
               <option value="admin">Administrateurs</option>
               <option value="commercial">Commerciaux</option>
             </select>
+            <input
+              type="text"
+              placeholder="Rechercher..."
+              className="border p-2 rounded"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
           </div>
-          <button
-            onClick={() => {
-              setEditMode(false);
-              setErrorMessage("");
-              setForm({ nom: "", prenom: "", email: "", password: "", tel: "", adresse: "", role: "commercial" });
-              setShowModal(true);
-            }}
-            className="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2 rounded shadow flex items-center gap-2"
-          >
-            <FaUserPlus /> Ajouter utilisateur
-          </button>
+
+          <div className="flex gap-2">
+            <button onClick={exportCSV} className="bg-green-500 text-white px-4 py-2 rounded flex items-center gap-2">
+              <FaDownload /> Export CSV
+            </button>
+            <button
+              onClick={() => {
+                setEditMode(false);
+                setForm({ nom: "", prenom: "", email: "", password: "", tel: "", adresse: "", role: "commercial" });
+                setShowModal(true);
+              }}
+              className="bg-indigo-600 text-white px-4 py-2 rounded flex items-center gap-2"
+            >
+              <FaUserPlus /> Ajouter utilisateur
+            </button>
+          </div>
         </div>
 
-        <table className="w-full text-sm text-gray-700 rounded overflow-hidden">
-          <thead className="bg-indigo-100 text-indigo-800">
+        <table className="w-full text-sm text-left text-gray-700">
+          <thead className="bg-indigo-100 text-gray-800">
             <tr>
-              <th className="py-3 px-4 text-left">Nom</th>
-              <th className="py-3 px-4 text-left">Email</th>
-              <th className="py-3 px-4 text-left">Téléphone</th>
-              <th className="py-3 px-4 text-left">Rôle</th>
-              <th className="py-3 px-4 text-center">Statut</th>
+              <th className="px-4 py-3">Nom</th>
+              <th className="px-4 py-3">Email</th>
+              <th className="px-4 py-3">Téléphone</th>
+              <th className="px-4 py-3">Rôle</th>
+              <th className="px-4 py-3 text-center">Statut</th>
             </tr>
           </thead>
           <tbody>
-            {users.length === 0 ? (
-              <tr>
-                <td colSpan="5" className="text-center py-6 text-gray-400">Aucun utilisateur trouvé.</td>
-              </tr>
+            {paginatedUsers.length === 0 ? (
+              <tr><td colSpan="5" className="text-center py-6">Aucun utilisateur trouvé.</td></tr>
             ) : (
-              users.map((user) => (
-                <tr key={user.id} className="border-t hover:bg-gray-50">
-                  <td className="py-3 px-4">{user.nom} {user.prenom}</td>
-                  <td className="py-3 px-4">{user.email}</td>
-                  <td className="py-3 px-4">{user.tel}</td>
-                  <td className="py-3 px-4 capitalize">{user.role}</td>
-                  <td className="py-3 px-4 text-center">
-                    <div className="flex items-center justify-center gap-2">
-                      <label className="inline-flex items-center cursor-pointer">
-                        <input
-                          type="checkbox"
-                          className="sr-only peer"
-                          checked={user.isActive}
-                          onChange={() => toggleStatus(user.id)}
-                        />
-                        <div className="relative w-14 h-8 bg-gray-300 peer-focus:outline-none rounded-full peer peer-checked:bg-green-500 transition-all duration-300">
-                          <div className="absolute left-[2px] top-[2px] bg-white w-7 h-7 rounded-full transition-all duration-300 peer-checked:translate-x-full flex items-center justify-center text-sm">
-                            {user.isActive ? "✅" : "❌"}
-                          </div>
-                        </div>
-                      </label>
-                      <button
-                        className="text-indigo-600 hover:text-indigo-800"
-                        onClick={() => openEditModal(user)}
-                        title="Modifier"
-                      >
-                        <FaPen />
-                      </button>
-                    </div>
+              paginatedUsers.map(user => (
+                <tr key={user.id} className="border-t">
+                  <td className="px-4 py-2">{user.nom} {user.prenom}</td>
+                  <td className="px-4 py-2">{user.email}</td>
+                  <td className="px-4 py-2">{user.tel}</td>
+                  <td className="px-4 py-2 capitalize">{user.role}</td>
+                  <td className="px-4 py-2 text-center">
+                    <input type="checkbox" checked={user.isActive} onChange={() => toggleStatus(user.id)} />
+                    <button onClick={() => openEditModal(user)} className="text-indigo-600 ml-2"><FaPen /></button>
                   </td>
                 </tr>
               ))
             )}
           </tbody>
         </table>
-      </div>
 
-      {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-2xl shadow-2xl w-full max-w-md border border-indigo-100">
-            <h3 className="text-xl font-bold mb-4 text-center text-indigo-700">
-              {editMode ? "Modifier l'utilisateur" : "Ajouter un utilisateur"}
-            </h3>
-            <div className="space-y-3">
-              {['nom', 'prenom', 'email', ...(editMode ? [] : ['password']), 'tel', 'adresse'].map((field) => {
-                if (field === 'password') {
-                  return (
-                    <div key={field} className="relative">
-                      <input
-                        type={showPassword ? 'text' : 'password'}
-                        placeholder="Mot de passe"
-                        value={form.password}
-                        onChange={(e) => setForm({ ...form, password: e.target.value })}
-                        className="w-full border border-gray-300 p-2 rounded-lg pr-10"
-                      />
-                      <span
-                        onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-gray-500"
-                      >
-                        {showPassword ? '👁️' : '🙈'}
-                      </span>
-                    </div>
-                  );
-                } else if (field === 'tel') {
-                  return (
-                    <div key={field} className="relative">
-                      <span className="absolute left-3 top-1/2 -translate-y-1/2">🇫🇷</span>
-                      <input
-                        type="tel"
-                        placeholder="Téléphone (ex: 0612345678)"
-                        value={form.tel}
-                        onChange={(e) => setForm({ ...form, tel: e.target.value })}
-                        className="w-full border border-gray-300 p-2 rounded-lg pl-10"
-                      />
-                    </div>
-                  );
-                } else {
-                  return (
-                    <input
-                      key={field}
-                      type={field === 'email' ? 'email' : 'text'}
-                      placeholder={field.charAt(0).toUpperCase() + field.slice(1)}
-                      value={form[field]}
-                      onChange={(e) => setForm({ ...form, [field]: e.target.value })}
-                      className="w-full border border-gray-300 p-2 rounded-lg"
-                    />
-                  );
-                }
-              })}
+        <div className="mt-6 flex flex-col md:flex-row justify-between items-center">
+          {/* Message de pagination à gauche */}
+          <div className="text-sm text-gray-600">
+            {filteredUsers.length > 0 && (
+              <>
+                {(currentPage - 1) * itemsPerPage + 1}–{Math.min(currentPage * itemsPerPage, filteredUsers.length)} sur {filteredUsers.length} utilisateur{filteredUsers.length > 1 ? "s" : ""}
+              </>
+            )}
+          </div>
 
-              <select
-                value={form.role}
-                onChange={(e) => setForm({ ...form, role: e.target.value })}
-                className="w-full border border-gray-300 p-2 rounded-lg"
+          {/* Pagination à droite */}
+          <div className="flex items-center gap-1 mt-3 md:mt-0">
+            <button
+              onClick={() => currentPage > 1 && setCurrentPage(currentPage - 1)}
+              disabled={currentPage === 1}
+              className={`px-3 py-1 rounded ${currentPage === 1 ? "bg-gray-200 cursor-not-allowed" : "bg-indigo-500 text-white"}`}
+            >
+              Précédent
+            </button>
+
+            {[...Array(totalPages)].map((_, index) => (
+              <button
+                key={index}
+                onClick={() => setCurrentPage(index + 1)}
+                className={`w-8 h-8 rounded text-sm ${currentPage === index + 1 ? "bg-indigo-600 text-white" : "bg-gray-200 text-gray-800"}`}
               >
-                <option value="commercial">Commercial</option>
-                <option value="admin">Administrateur</option>
-              </select>
+                {index + 1}
+              </button>
+            ))}
 
-              {errorMessage && (
-                <div className="text-red-600 font-medium text-sm bg-red-50 border border-red-300 p-2 rounded">
-                  {errorMessage}
-                </div>
-              )}
-
-              <div className="flex justify-end gap-2 pt-2">
-                <button
-                  onClick={() => {
-                    setShowModal(false);
-                    setEditMode(false);
-                    setErrorMessage("");
-                  }}
-                  className="bg-gray-300 px-4 py-2 rounded-lg hover:bg-gray-400 transition"
-                >
-                  Annuler
-                </button>
-                <button
-                  onClick={handleSubmitUser}
-                  className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition"
-                >
-                  {editMode ? "Enregistrer" : "Ajouter"}
-                </button>
-              </div>
-            </div>
+            <button
+              onClick={() => currentPage < totalPages && setCurrentPage(currentPage + 1)}
+              disabled={currentPage === totalPages}
+              className={`px-3 py-1 rounded ${currentPage === totalPages ? "bg-gray-200 cursor-not-allowed" : "bg-indigo-500 text-white"}`}
+            >
+              Suivant
+            </button>
           </div>
         </div>
+
+        {/* Modal ajout/modif */}
+        {showModal && (
+  <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+    <div className="bg-white w-full max-w-md mx-4 rounded-2xl shadow-lg p-6">
+      <h3 className="text-xl font-bold mb-4 text-indigo-700">
+        {editMode ? "Modifier l'utilisateur" : "Ajouter un utilisateur"}
+      </h3>
+
+      {errorMessage && (
+        <p className="text-red-600 text-sm mb-3 whitespace-pre-line">{errorMessage}</p>
       )}
+
+      <div className="space-y-3">
+        {["nom", "prenom", "email", "tel", "adresse"].map((field) => (
+          <div key={field}>
+            <label className="block text-sm font-medium capitalize mb-1">
+              {field}
+            </label>
+            <input
+              type="text"
+              className="w-full p-2 border rounded"
+              value={form[field]}
+              onChange={(e) => setForm({ ...form, [field]: e.target.value })}
+            />
+          </div>
+        ))}
+
+        {!editMode && (
+          <>
+            <div>
+              <label className="block text-sm font-medium mb-1">Mot de passe</label>
+              <div className="relative">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  className="w-full p-2 border rounded pr-10"
+                  value={form.password}
+                  onChange={(e) => setForm({ ...form, password: e.target.value })}
+                />
+                <span
+                  className="absolute top-1/2 right-3 transform -translate-y-1/2 text-gray-600 cursor-pointer"
+                  onClick={() => setShowPassword(!showPassword)}
+                >
+                  {showPassword ? <FaEyeSlash /> : <FaEye />}
+                </span>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-1">Rôle</label>
+              <select
+                className="w-full p-2 border rounded"
+                value={form.role}
+                onChange={(e) => setForm({ ...form, role: e.target.value })}
+              >
+                <option value="commercial">Commercial</option>
+                <option value="admin">Admin</option>
+              </select>
+            </div>
+          </>
+        )}
+      </div>
+
+      <div className="flex justify-end gap-2 mt-6">
+        <button
+          onClick={() => setShowModal(false)}
+          className="bg-gray-300 text-gray-800 px-4 py-2 rounded hover:bg-gray-400"
+        >
+          Annuler
+        </button>
+        <button
+          onClick={handleSubmitUser}
+          className="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700"
+        >
+          {editMode ? "Modifier" : "Ajouter"}
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
+      </div>
     </div>
   );
 };

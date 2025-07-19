@@ -19,7 +19,7 @@ const groupedLinks = [
     { to: "/clients-list", label: "Clients", icon: <FaUsers /> },
   ],
   [
-    { to: "/orders", label: "Commandes", icon: <FaClipboardList /> },
+    { to: "/orders", label: "Commandes En Attentes", icon: <FaClipboardList /> },
     { to: "/invoices", label: "Bon de Commande", icon: <FaClipboardCheck /> },
   ],
   [

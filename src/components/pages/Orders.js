@@ -1,14 +1,18 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { Link, useNavigate } from "react-router-dom";
-import { FaTrash, FaSearch } from "react-icons/fa";
+import { FaTrash, FaSearch, FaEye } from "react-icons/fa";
+
+
 
 const OrdersPage = () => {
   const [orders, setOrders] = useState([]);
   const [search, setSearch] = useState("");
-  const [dateFilter, setDateFilter] = useState("");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
   const navigate = useNavigate();
-
+  const [currentPage, setCurrentPage] = useState(1);
+  const ordersPerPage = 10;
   useEffect(() => {
     const fetchOrders = async () => {
       const token = localStorage.getItem("token");
@@ -16,11 +20,10 @@ const OrdersPage = () => {
         const res = await axios.get("http://localhost:4000/commandes", {
           headers: { Authorization: `Bearer ${token}` },
         });
-         const commandesEnattente = res.data.filter(
+        const commandesEnAttente = res.data.filter(
           (commande) => commande.statut !== "validee"
         );
-        setOrders(commandesEnattente);
-        console.log(res.data)
+        setOrders(commandesEnAttente);
       } catch (err) {
         console.error("Erreur lors du chargement des commandes :", err);
       }
@@ -47,11 +50,26 @@ const OrdersPage = () => {
     const matchSearch = order.numero_commande
       ?.toLowerCase()
       .includes(search.toLowerCase());
-    const matchDate = dateFilter
-      ? new Date(order.dateCreation).toISOString().slice(0, 10) === dateFilter
-      : true;
-    return matchSearch && matchDate;
+
+    const orderDate = new Date(order.dateCreation);
+    const matchStart = startDate ? orderDate >= new Date(startDate) : true;
+    const matchEnd = endDate ? orderDate <= new Date(endDate) : true;
+
+    return matchSearch && matchStart && matchEnd;
   });
+  // 2. Pagination : découpage des commandes
+const indexOfLastOrder = currentPage * ordersPerPage;
+const indexOfFirstOrder = indexOfLastOrder - ordersPerPage;
+const currentOrders = filteredOrders.slice(indexOfFirstOrder, indexOfLastOrder);
+const totalPages = Math.ceil(filteredOrders.length / ordersPerPage);
+
+// 3. Navigation pagination
+const handleNext = () => {
+  if (currentPage < totalPages) setCurrentPage((prev) => prev + 1);
+};
+const handlePrev = () => {
+  if (currentPage > 1) setCurrentPage((prev) => prev - 1);
+};
 
   return (
     <div className="p-8 bg-gradient-to-br from-gray-50 to-blue-50 min-h-screen font-[Inter]">
@@ -60,9 +78,9 @@ const OrdersPage = () => {
           Liste des Commandes
         </h2>
 
-        {/* 🔍 Recherche et Date */}
+        {/* 🔍 Recherche et Dates */}
         <div className="flex flex-col md:flex-row items-center gap-4 mb-6">
-          <div className="relative w-full md:w-1/2">
+          <div className="relative w-full md:w-1/3">
             <FaSearch className="absolute left-3 top-3 text-gray-400" />
             <input
               type="text"
@@ -74,13 +92,21 @@ const OrdersPage = () => {
           </div>
           <input
             type="date"
-            value={dateFilter}
-            onChange={(e) => setDateFilter(e.target.value)}
-            className="px-4 py-2 rounded shadow bg-white border w-full md:w-1/3"
+            value={startDate}
+            onChange={(e) => setStartDate(e.target.value)}
+            className="px-4 py-2 rounded shadow bg-white border w-full md:w-1/4"
+            placeholder="Date de début"
+          />
+          <input
+            type="date"
+            value={endDate}
+            onChange={(e) => setEndDate(e.target.value)}
+            className="px-4 py-2 rounded shadow bg-white border w-full md:w-1/4"
+            placeholder="Date de fin"
           />
         </div>
 
-        {/* 🧾 Tableau */}
+        {/* 🧾 Tableau des commandes */}
         <table className="w-full bg-white rounded overflow-hidden">
           <thead className="bg-indigo-100 text-indigo-800">
             <tr>
@@ -100,7 +126,7 @@ const OrdersPage = () => {
                 </td>
               </tr>
             ) : (
-              filteredOrders.map((commande) => (
+              currentOrders.map((commande)=> (
                 <tr key={commande.id} className="border-t hover:bg-gray-50">
                   <td className="py-3 px-6">{commande.numero_commande}</td>
                   <td className="py-3 px-6">
@@ -108,12 +134,12 @@ const OrdersPage = () => {
                   </td>
                   <td className="py-3 px-6">
                     {commande.prix_total_ttc
-                      ? `${Number(commande.prix_total_ttc).toFixed(2)} euro`
+                      ? `${Number(commande.prix_total_ttc).toFixed(2)} €`
                       : "—"}
                   </td>
                   <td className="py-3 px-6">
                     {commande.prix_hors_taxe
-                      ? `${Number(commande.prix_hors_taxe).toFixed(2)} euro`
+                      ? `${Number(commande.prix_hors_taxe).toFixed(2)} €`
                       : "—"}
                   </td>
                   <td className="py-3 px-6">
@@ -130,9 +156,10 @@ const OrdersPage = () => {
                   <td className="py-3 px-6 text-center">
                     <Link
                       to={`/bande-de-commande/${commande.id}`}
-                      className="text-indigo-600 hover:underline font-semibold mr-3"
+                      className="text-indigo-600 hover:text-indigo-800 mr-3"
+                      title="Voir la commande"
                     >
-                      Voir
+                      <FaEye className="inline-block text-lg" />
                     </Link>
                     <button
                       onClick={() => deleteOrder(commande.id)}
@@ -147,9 +174,70 @@ const OrdersPage = () => {
             )}
           </tbody>
         </table>
+        <div className="mb-4 flex justify-end">
+  
+</div>
+        {/* 🔢 Pagination */}
+{/* 🔢 Pagination numérotée */}
+{/* 🔢 Pagination */} 
+<div className="mt-6 flex flex-col md:flex-row justify-between items-center">
+  <div className="text-sm text-gray-600 mb-2 md:mb-0">
+    {filteredOrders.length > 0 && (
+      <>
+        {(indexOfFirstOrder + 1)}–{Math.min(indexOfLastOrder, filteredOrders.length)} sur {filteredOrders.length} commande{filteredOrders.length > 1 ? "s" : ""}
+      </>
+    )}
+  </div>
+
+  <div className="flex items-center space-x-1">
+    {/* Bouton Précédent */}
+    <button
+      onClick={handlePrev}
+      disabled={currentPage === 1}
+      className={`px-3 py-1 rounded ${
+        currentPage === 1
+          ? "bg-gray-200 cursor-not-allowed text-gray-500"
+          : "bg-indigo-500 text-white hover:bg-indigo-600"
+      }`}
+    >
+      Précédent
+    </button>
+
+    {/* Pagination Numérotée */}
+    {[...Array(totalPages)].map((_, index) => {
+      const pageNum = index + 1;
+      return (
+        <button
+          key={pageNum}
+          onClick={() => setCurrentPage(pageNum)}
+          className={`w-8 h-8 rounded-md text-sm ${
+            currentPage === pageNum
+              ? "bg-indigo-600 text-white"
+              : "bg-gray-200 text-gray-800"
+          } hover:bg-indigo-400`}
+        >
+          {pageNum}
+        </button>
+      );
+    })}
+
+    {/* Bouton Suivant */}
+    <button
+      onClick={handleNext}
+      disabled={currentPage === totalPages}
+      className={`px-3 py-1 rounded ${
+        currentPage === totalPages
+          ? "bg-gray-200 cursor-not-allowed text-gray-500"
+          : "px-3 py-1 rounded bg-gray-200 hover:bg-gray-300"
+      }`}
+    >
+      Suivant
+    </button>
+  </div>
+</div>
       </div>
     </div>
   );
-};
+}
 
 export default OrdersPage;

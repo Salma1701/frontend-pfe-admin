@@ -1,348 +1,334 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { FaToggleOn, FaToggleOff, FaTimes } from "react-icons/fa";
-import { toast, ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
 
 const AdminObjectifsPage = () => {
+  const [commercials, setCommercials] = useState([]);
   const [objectifs, setObjectifs] = useState([]);
-  const [categories, setCategories] = useState([]);
-  const [commerciaux, setCommerciaux] = useState([]);
-  const [selectedCategories, setSelectedCategories] = useState([]);
-  const [progressData, setProgressData] = useState([]);
-    const [showEditModal, setShowEditModal] = useState(false);
-
-
+  const [filtrerGlobaux, setFiltrerGlobaux] = useState(false);
   const [form, setForm] = useState({
     commercialId: "",
-    dateDebut: "",
-    dateFin: "",
+    dateDebut: new Date().toISOString().slice(0, 10),
+    dateFin: new Date().toISOString().slice(0, 10),
+    montantCible: "",
+    prime: "",
     mission: "",
   });
+const [currentPage, setCurrentPage] = useState(1);
+const itemsPerPage = 5; // Nombre d'objectifs par page
 
- const [editForm, setEditForm] = useState({
-    prime: "",
-    pourcentageCible: "",
-    mission: ""
-  });
-    const [editingId, setEditingId] = useState(null);
+const getPaginatedObjectifs = () => {
+  const filtered = objectifs.filter((obj) => (filtrerGlobaux ? !obj.commercial : true));
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  return filtered.slice(startIndex, endIndex);
+};
 
+const totalPages = Math.ceil(
+  objectifs.filter((obj) => (filtrerGlobaux ? !obj.commercial : true)).length / itemsPerPage
+);
+
+const goToPage = (page) => {
+  if (page >= 1 && page <= totalPages) {
+    setCurrentPage(page);
+  }
+};
+  const API_BASE = "http://localhost:4000";
   const token = localStorage.getItem("token");
+  const headers = {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  };
 
-  useEffect(() => {
-    fetchAll();
-  }, []);
-
-  const fetchAll = async () => {
-    await Promise.all([
-      fetchObjectifs(),
-      fetchCommerciaux(),
-      fetchCategories(),
-      fetchProgress(),
-    ]);
+  const fetchCommercials = async () => {
+    try {
+      const res = await axios.get(`${API_BASE}/users?role=commercial`, headers);
+      setCommercials(res.data);
+    } catch (err) {
+      alert("Erreur chargement commerciaux : " + err.response?.data?.message);
+    }
   };
 
   const fetchObjectifs = async () => {
     try {
-      const res = await axios.get("http://localhost:4000/objectifs", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await axios.get(`${API_BASE}/objectifs`, headers);
       setObjectifs(res.data);
-    } catch {
-      toast.error("Échec chargement objectifs.");
+    } catch (err) {
+      alert("Erreur chargement objectifs : " + err.response?.data?.message);
     }
   };
 
-  const fetchCommerciaux = async () => {
-    try {
-      const res = await axios.get("http://localhost:4000/users?role=commercial", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setCommerciaux(res.data);
-    } catch {
-      toast.error("Échec chargement commerciaux.");
-    }
-  };
-
-  const fetchCategories = async () => {
-    try {
-      const res = await axios.get("http://localhost:4000/categories", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setCategories(res.data);
-    } catch {
-      toast.error("Échec chargement catégories.");
-    }
-  };
-
-  const fetchProgress = async () => {
-    try {
-      const res = await axios.get("http://localhost:4000/objectifs/admin/progress", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setProgressData(res.data);
-    } catch {
-      toast.error("Erreur chargement avancement.");
-    }
-  };
+  useEffect(() => {
+    fetchCommercials();
+    fetchObjectifs();
+  }, []);
 
   const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    const numericFields = ["montantCible", "prime"];
+    setForm({
+      ...form,
+      [name]: numericFields.includes(name)
+        ? value === "" ? "" : Number(value)
+        : value,
+    });
   };
- const handleEditChange = (e) => {
-    setEditForm({ ...editForm, [e.target.name]: e.target.value });
-  };
-  const handleSubmit = async () => {
-    if (!form.dateDebut || !form.dateFin || !form.commercialId ) {
-      return toast.error("Champs obligatoires manquants.");
-    }
 
+  const handleSubmit = async (e) => {
+    e.preventDefault();
     try {
-      for (const cat of selectedCategories) {
-        const rawPourcentage = parseFloat(form[`pourcentage_${cat}`]);
-        const rawPrime = parseFloat(form[`prime_${cat}`]);
+      await axios.post(`${API_BASE}/objectifs`, form, headers);
+      fetchObjectifs();
+      alert("✅ Objectif ajouté !");
+    } catch (err) {
+      alert("Erreur ajout objectif : " + err.response?.data?.message);
+    }
+  };
 
-        const payload = {
-          commercialId: Number(form.commercialId),
-          dateDebut: form.dateDebut,
-          dateFin: form.dateFin,
-          prime: isNaN(rawPrime) ? 0 : rawPrime,
-          pourcentageCible: isNaN(rawPourcentage) ? undefined : rawPourcentage,
-          categorieProduit: cat,
-          mission: form.mission || undefined,
-        };
-
-        console.log("📦 Payload envoyé :", payload);
-
-        await axios.post("http://localhost:4000/objectifs", payload, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+  const handleGlobalSubmit = async () => {
+    try {
+      if (form.commercialId) {
+        alert("❌ Ne sélectionne pas de commercial pour un objectif global !");
+        return;
       }
 
-      toast.success("Objectifs créés !");
-      setForm({ commercialId: "", dateDebut: "", dateFin: "", mission: ""});
-      setSelectedCategories([]);
-      fetchAll();
-    } catch (error) {
-      toast.error("Erreur lors de la création des objectifs.");
-      console.error("❌ Détails erreur :", error.response?.data || error.message);
+      const payload = {
+        dateDebut: form.dateDebut,
+        dateFin: form.dateFin,
+        montantCible: Number(form.montantCible),
+        prime: Number(form.prime),
+        mission: form.mission || undefined,
+      };
+
+      const res = await fetch(`${API_BASE}/objectifs/global`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.message || "Erreur inconnue");
+      }
+
+      await fetchObjectifs();
+      alert("✅ Objectif global ajouté !");
+    } catch (err) {
+      alert("❌ Erreur ajout objectif global : " + err.message);
     }
   };
 
- const handleEditClick = (obj) => {
-    setEditingId(obj.id);
-    setEditForm({
-      prime: obj.prime,
-      pourcentageCible: obj.pourcentageCible,
-      mission: obj.mission || "",
-    });
-    setShowEditModal(true);
-  };
-
-  const closeEditModal = () => {
-    setShowEditModal(false);
-    setEditingId(null);
-  };
-
-  const submitEdit = async () => {
+  const handleToggleStatus = async (id) => {
     try {
-      await axios.put(`http://localhost:4000/objectifs/${editingId}`, editForm, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      toast.success("Objectif mis à jour !");
-      closeEditModal();
-      fetchAll();
-    } catch {
-      toast.error("Erreur lors de la mise à jour.");
-    }
-  };
-
-  const handleDelete = async (id) => {
-    if (!window.confirm("Confirmer la suppression ?")) return;
-    try {
-      await axios.delete(`http://localhost:4000/objectifs/${id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      toast.success("Supprimé !");
-      fetchAll();
-    } catch {
-      toast.error("Erreur suppression.");
-    }
-  };
-
-  const toggleStatus = async (id) => {
-    try {
-      await axios.put(`http://localhost:4000/objectifs/${id}/status`, {}, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      fetchAll();
-    } catch {
-      toast.error("Erreur modification statut.");
+      await axios.put(`${API_BASE}/objectifs/${id}/status`, {}, headers);
+      fetchObjectifs();
+    } catch (err) {
+      alert("Erreur changement de statut : " + err.response?.data?.message);
     }
   };
 
   return (
-    <div className="p-8 bg-gradient-to-br from-gray-50 to-blue-50 min-h-screen font-[Inter] text-gray-800">
-      <ToastContainer />
-            
-      {/* Modal d'édition */}
-      {showEditModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl p-6 w-full max-w-md mx-4 shadow-2xl">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-xl font-bold text-indigo-700">Modifier l'objectif</h3>
-              <button 
-                onClick={closeEditModal}
-                className="text-gray-500 hover:text-gray-700"
-              >
-                <FaTimes size={20} />
-              </button>
-            </div>
-            
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium mb-1">
-                  Prime (€)
-                </label>
-                <input
-                  type="number"
-                  name="prime"
-                  value={editForm.prime}
-                  onChange={handleEditChange}
-                  className="w-full border px-3 py-2 rounded shadow focus:ring-2 focus:ring-indigo-300"
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium mb-1">
-                  Pourcentage cible (%)
-                </label>
-                <input
-                  type="number"
-                  name="pourcentageCible"
-                  value={editForm.pourcentageCible}
-                  onChange={handleEditChange}
-                  className="w-full border px-3 py-2 rounded shadow focus:ring-2 focus:ring-indigo-300"
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium mb-1">
-                  Mission
-                </label>
-                <textarea
-                  name="mission"
-                  value={editForm.mission}
-                  onChange={handleEditChange}
-                  className="w-full border px-3 py-2 rounded shadow focus:ring-2 focus:ring-indigo-300"
-                  rows="3"
-                />
-              </div>
-            </div>
-            
-            <div className="flex justify-end gap-3 mt-6">
-              <button
-                onClick={closeEditModal}
-                className="px-4 py-2 border border-gray-300 rounded text-gray-700 hover:bg-gray-100"
-              >
-                Annuler
-              </button>
-              <button
-                onClick={submitEdit}
-                className="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700"
-              >
-                Enregistrer
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-      <div className="max-w-6xl mx-auto bg-white shadow-xl rounded-xl p-6">
-        <h2 className="text-3xl font-extrabold text-indigo-700 mb-6">
-          Gestion des Objectifs Commerciaux
-        </h2>
+    <div className="p-6 max-w-5xl mx-auto">
+      <h2 className="text-2xl font-bold mb-4 text-indigo-600">Ajouter Objectif Commercial</h2>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-          <select name="commercialId" value={form.commercialId} onChange={handleChange} className="border px-4 py-2 rounded shadow">
-            <option value="">Sélectionner un commercial</option>
-            {commerciaux.map(c => (
-              <option key={c.id} value={c.id}>{c.nom} {c.prenom}</option>
+      <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-white p-4 rounded shadow">
+        <div>
+          <label className="block text-sm font-medium">Commercial :</label>
+          <select
+            name="commercialId"
+            value={form.commercialId}
+            onChange={handleChange}
+            className="w-full mt-1 border rounded px-3 py-2"
+          >
+            <option value="">-- Choisir --</option>
+            {commercials.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.nom} {c.prenom}
+              </option>
             ))}
           </select>
-          <input type="date" name="dateDebut" value={form.dateDebut} onChange={handleChange} className="border px-4 py-2 rounded shadow" />
-          <input type="date" name="dateFin" value={form.dateFin} onChange={handleChange} className="border px-4 py-2 rounded shadow" />
-          <input name="mission" value={form.mission} onChange={handleChange} placeholder="Mission" className="border px-4 py-2 rounded shadow" />
         </div>
 
-        <h3 className="text-lg font-semibold mt-4 mb-2">Catégories Produits</h3>
-       <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-  {categories.map((cat) => (
-    <label key={cat.id} className="flex items-center gap-2">
-      <input
-        type="checkbox"
-        value={cat.nom}
-        checked={selectedCategories.includes(cat.nom)}
-        onChange={(e) => {
-          if (e.target.checked) {
-            // Sélectionne uniquement cette catégorie, remplace les autres
-            setSelectedCategories([cat.nom]);
-          } else {
-            // Si décochée, vider la sélection
-            setSelectedCategories([]);
-          }
-        }}
-        className="h-4 w-4 text-indigo-600 focus:ring-indigo-500"
-      />
-      {cat.nom}
-    </label>
-  ))}
+        <div>
+          <label className="block text-sm font-medium">Date début :</label>
+          <input
+            type="date"
+            name="dateDebut"
+            value={form.dateDebut}
+            onChange={handleChange}
+            className="w-full mt-1 border rounded px-3 py-2"
+            min="2024-01-01"
+            max="2030-12-31"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium">Date fin :</label>
+          <input
+            type="date"
+            name="dateFin"
+            value={form.dateFin}
+            onChange={handleChange}
+            className="w-full mt-1 border rounded px-3 py-2"
+            min={form.dateDebut}
+            max="2030-12-31"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium">Montant Cible (€):</label>
+          <input
+            type="number"
+            name="montantCible"
+            value={form.montantCible}
+            onChange={handleChange}
+            required
+            className="w-full mt-1 border rounded px-3 py-2"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium">Prime (€):</label>
+          <input
+            type="number"
+            name="prime"
+            value={form.prime}
+            onChange={handleChange}
+            required
+            className="w-full mt-1 border rounded px-3 py-2"
+          />
+        </div>
+
+        <div className="md:col-span-2">
+          <label className="block text-sm font-medium">Mission (optionnel):</label>
+          <input
+            type="text"
+            name="mission"
+            value={form.mission}
+            onChange={handleChange}
+            className="w-full mt-1 border rounded px-3 py-2"
+          />
+        </div>
+
+        <div className="md:col-span-2 flex gap-4">
+          <button type="submit" className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
+            Ajouter
+          </button>
+          <button
+            type="button"
+            onClick={handleGlobalSubmit}
+            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+          >
+            Objectif Global
+          </button>
+        </div>
+      </form>
+
+      <hr className="my-8" />
+      <h3 className="text-xl font-semibold mb-4">📋 Liste des Objectifs</h3>
+      <div className="mb-4">
+        <label className="inline-flex items-center">
+          <input
+            type="checkbox"
+            className="form-checkbox h-4 w-4 text-blue-600"
+            checked={filtrerGlobaux}
+            onChange={(e) => setFiltrerGlobaux(e.target.checked)}
+          />
+          <span className="ml-2 text-sm text-gray-700">Afficher uniquement les objectifs globaux</span>
+        </label>
+      </div>
+
+      <table className="w-full table-auto border-collapse border">
+        <thead>
+          <tr className="bg-indigo-100 text-indigo-800">
+            <th className="border p-2">Commercial</th>
+            <th className="border p-2">Cible (€)</th>
+            <th className="border p-2">Prime (€)</th>
+            <th className="border p-2">Période</th>
+            <th className="border p-2">Statut</th>
+            <th className="border p-2">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {getPaginatedObjectifs().map((obj) => (
+  <tr key={obj.id} className="text-center">
+    <td className="border p-2">
+      {obj.commercial ? (
+        <span className="text-gray-800">
+          {obj.commercial.nom} {obj.commercial.prenom}
+        </span>
+      ) : (
+        <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-sm font-semibold">
+          Objectif Global
+        </span>
+      )}
+    </td>
+    <td className="border p-2">{obj.montantCible}</td>
+    <td className="border p-2">{obj.prime}</td>
+    <td className="border p-2">
+      {new Date(obj.dateDebut).toLocaleDateString()} -{" "}
+      {new Date(obj.dateFin).toLocaleDateString()}
+    </td>
+    <td className="border p-2">{obj.isActive ? "✅" : "❌"}</td>
+    <td className="border p-2 flex justify-center gap-2">
+      <button
+        onClick={() => handleToggleStatus(obj.id)}
+        className="text-yellow-600 hover:text-yellow-800"
+      >
+        🔄
+      </button>
+    </td>
+  </tr>
+))}
+        </tbody>
+      </table>
+     <div className="flex justify-between items-center mt-4 px-1 text-sm text-gray-700">
+  {/* Message à gauche */}
+  <div>
+    {objectifs.length > 0 && (
+      <>
+        {(currentPage - 1) * itemsPerPage + 1} –{" "}
+        {Math.min(currentPage * itemsPerPage, objectifs.filter((obj) => (filtrerGlobaux ? !obj.commercial : true)).length)}{" "}
+        sur {objectifs.filter((obj) => (filtrerGlobaux ? !obj.commercial : true)).length} éléments
+      </>
+    )}
+  </div>
+
+  {/* Pagination à droite */}
+  <div className="flex items-center space-x-1">
+    <button
+      onClick={() => goToPage(currentPage - 1)}
+      disabled={currentPage === 1}
+      className="px-2 py-1 bg-gray-100 hover:bg-gray-200 rounded disabled:opacity-50"
+    >
+      Précédent
+    </button>
+    {[...Array(totalPages)].map((_, i) => (
+      <button
+        key={i}
+        onClick={() => goToPage(i + 1)}
+        className={`px-3 py-1 rounded ${
+          currentPage === i + 1
+            ? "bg-indigo-600 text-white"
+            : "bg-gray-100 hover:bg-gray-200"
+        }`}
+      >
+        {i + 1}
+      </button>
+    ))}
+    <button
+      onClick={() => goToPage(currentPage + 1)}
+      disabled={currentPage === totalPages}
+      className="px-2 py-1 bg-gray-100 hover:bg-gray-200 rounded disabled:opacity-50"
+    >
+      Suivant
+    </button>
+  </div>
 </div>
 
-        {selectedCategories.map((catNom) => (
-          <div key={catNom} className="mt-4 border p-4 rounded bg-gray-50 shadow">
-            <h4 className="font-bold mb-2">Catégorie : {catNom}</h4>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <input type="number" placeholder="Pourcentage cible (%)" className="border p-2 rounded"
-                onChange={(e) => setForm(prev => ({ ...prev, [`pourcentage_${catNom}`]: e.target.value }))} />
-              <input type="number" placeholder="Prime (€)" className="border p-2 rounded"
-                onChange={(e) => setForm(prev => ({ ...prev, [`prime_${catNom}`]: e.target.value }))} />
-            </div>
-          </div>
-        ))}
-
-        <button onClick={handleSubmit} className="mt-6 bg-indigo-600 text-white px-5 py-2 rounded hover:bg-indigo-700">
-          Valider tous les objectifs
-        </button>
-
-        <div className="mt-10">
-          <h3 className="text-2xl font-semibold mb-4">Objectifs Enregistrés</h3>
-          {objectifs.map(obj => (
-            <div key={obj.id} className="py-4 border-b flex justify-between items-center">
-              <div>
-                  <p className="font-bold">
-                    {obj.commercial?.nom} {obj.commercial?.prenom} 
-                    <span className={`ml-2 px-2 py-1 text-xs rounded ${obj.isActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
-                      {obj.isActive ? 'Actif' : 'Inactif'}
-                    </span>
-                  </p>
-                <p>Prime : {obj.prime} €</p>
-                {obj.pourcentageCible && <p>Objectif : {obj.pourcentageCible}%</p>}
-                {obj.mission && <p>Mission : {obj.mission}</p>}
-                <p className="text-xs text-gray-500">
-                  Période : {obj.dateDebut?.slice(0, 10)} → {obj.dateFin?.slice(0, 10)}
-                </p>
-              </div>
-              <div className="flex gap-4 items-center">
-                <button onClick={() => toggleStatus(obj.id)}>
-                  {obj.isActive ? <FaToggleOn className="text-green-500" size={22} /> : <FaToggleOff className="text-gray-400" size={22} />}
-                </button>
-                <button onClick={() => handleEditClick(obj)} className="text-blue-600 underline">Modifier</button>
-                <button onClick={() => handleDelete(obj.id)} className="text-red-500 underline">Supprimer</button>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
     </div>
   );
 };

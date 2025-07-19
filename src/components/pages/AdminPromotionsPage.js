@@ -17,7 +17,8 @@ const AdminPromotionsPage = () => {
     dateDebut: "",
     dateFin: "",
   });
-
+const [currentPage, setCurrentPage] = useState(1);
+const promotionsPerPage = 10;
   const token = localStorage.getItem("token");
 
   const fetchPromotions = async () => {
@@ -113,7 +114,10 @@ const AdminPromotionsPage = () => {
     if (!token) toast.error("Token manquant. Veuillez vous reconnecter.");
     else fetchPromotions();
   }, []);
-
+const indexOfLast = currentPage * promotionsPerPage;
+const indexOfFirst = indexOfLast - promotionsPerPage;
+const currentPromotions = promotions.slice(indexOfFirst, indexOfLast);
+const totalPages = Math.ceil(promotions.length / promotionsPerPage);
   return (
     <div className="p-8 bg-gradient-to-br from-gray-50 to-blue-50 min-h-screen font-[Inter]">
       <ToastContainer position="top-right" autoClose={3000} />
@@ -142,7 +146,7 @@ const AdminPromotionsPage = () => {
         {/* Liste des promotions */}
         <div className="bg-white rounded-xl shadow-md overflow-hidden">
           <table className="min-w-full text-sm text-gray-800">
-            <thead className="bg-indigo-50 text-indigo-800">
+            <thead className="bg-indigo-100 text-indigo-800">
               <tr>
                 <th className="px-6 py-3 font-semibold text-left">Titre</th>
                 <th className="px-6 py-3 font-semibold text-left">Description</th>
@@ -154,7 +158,7 @@ const AdminPromotionsPage = () => {
               </tr>
             </thead>
             <tbody>
-              {promotions.map((promo, idx) => (
+              {currentPromotions.map((promo, idx) => (
                 <tr key={promo.id} className={idx % 2 === 0 ? "bg-white" : "bg-gray-50"}>
                   <td className="px-6 py-4 font-medium capitalize">{promo.titre}</td>
                   <td className="px-6 py-4">{promo.description}</td>
@@ -182,6 +186,43 @@ const AdminPromotionsPage = () => {
               ))}
             </tbody>
           </table>
+          {promotions.length > 0 && (
+  <div className="flex items-center justify-between px-4 py-4 mt-4 bg-gray-50 border-t rounded-b-xl">
+    {/* ➤ Texte à gauche */}
+    <div className="text-sm text-gray-600">
+      {indexOfFirst + 1} – {Math.min(indexOfLast, promotions.length)} sur {promotions.length} promotions
+    </div>
+
+    {/* ➤ Pagination à droite */}
+    <div className="flex items-center gap-1">
+      <button
+        onClick={() => currentPage > 1 && setCurrentPage(currentPage - 1)}
+        disabled={currentPage === 1}
+        className="px-3 py-1 rounded bg-gray-200 hover:bg-gray-300 disabled:opacity-50"
+      >
+        Précédent
+      </button>
+
+      {Array.from({ length: totalPages }, (_, i) => (
+        <button
+          key={i}
+          onClick={() => setCurrentPage(i + 1)}
+          className={`px-3 py-1 rounded ${currentPage === i + 1 ? "bg-indigo-600 text-white" : "bg-white border"}`}
+        >
+          {i + 1}
+        </button>
+      ))}
+
+      <button
+        onClick={() => currentPage < totalPages && setCurrentPage(currentPage + 1)}
+        disabled={currentPage === totalPages}
+        className="px-3 py-1 rounded bg-gray-200 hover:bg-gray-300 disabled:opacity-50"
+      >
+        Suivant
+      </button>
+    </div>
+  </div>
+)}
         </div>
 
         {isEditing && editForm && (
