@@ -7,7 +7,7 @@ import {
 } from "react-icons/fa";
 import { toast } from "react-toastify";
 import Papa from "papaparse";
-
+import { LuPencil } from "react-icons/lu";
 const UsersPage = () => {
   const [users, setUsers] = useState([]);
   const [roleFilter, setRoleFilter] = useState("all");
@@ -188,6 +188,7 @@ const UsersPage = () => {
               <th className="px-4 py-3">Téléphone</th>
               <th className="px-4 py-3">Rôle</th>
               <th className="px-4 py-3 text-center">Statut</th>
+              <th className="px-4 py-3 text-center">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -200,9 +201,26 @@ const UsersPage = () => {
                   <td className="px-4 py-2">{user.email}</td>
                   <td className="px-4 py-2">{user.tel}</td>
                   <td className="px-4 py-2 capitalize">{user.role}</td>
+                  <td className="px-6 py-4 text-center">
+                    <button
+                      onClick={() => openEditModal(user)}
+                      title="Modifier"
+                      className="w-8 h-8 rounded-full border border-blue-400 flex items-center justify-center text-blue-600 hover:bg-blue-100 mx-auto"
+                    >
+                      <LuPencil className="w-4 h-4" />
+                    </button>
+                  </td>
                   <td className="px-4 py-2 text-center">
-                    <input type="checkbox" checked={user.isActive} onChange={() => toggleStatus(user.id)} />
-                    <button onClick={() => openEditModal(user)} className="text-indigo-600 ml-2"><FaPen /></button>
+                    <button
+                      onClick={() => toggleStatus(user.id)}
+                      className={`px-3 py-1 text-sm font-semibold rounded-full ${
+                        user.isActive
+                          ? "bg-green-100 text-green-700 border border-green-400 hover:bg-green-200"
+                          : "bg-red-100 text-red-700 border border-red-400 hover:bg-red-200"
+                      }`}
+                    >
+                      {user.isActive ? "Désactiver" : "Activer"}
+                    </button>
                   </td>
                 </tr>
               ))

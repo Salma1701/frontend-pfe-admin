@@ -166,20 +166,24 @@ const totalPages = Math.ceil(promotions.length / promotionsPerPage);
                   <td className="px-6 py-4">{new Date(promo.dateDebut).toLocaleDateString()}</td>
                   <td className="px-6 py-4">{new Date(promo.dateFin).toLocaleDateString()}</td>
                   <td className="px-6 py-4 text-center">
-                    <span className={`font-medium ${promo.isActive ? "text-green-600" : "text-red-500"}`}>
-                      {promo.isActive ? "✅ Active" : "❌ Inactive"}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 text-right space-x-2">
-                    <button onClick={() => handleEdit(promo)} className="text-gray-600 hover:text-gray-800" title="Modifier">
-                      <LuPencil size={18} />
-                    </button>
+                  <button
+                    onClick={() => handleToggleStatus(promo.id)}
+                    className={`px-3 py-1 text-sm font-semibold rounded-full ${
+                      promo.isActive
+                        ? "bg-green-100 text-green-700 border border-green-400 hover:bg-green-200"
+                        : "bg-red-100 text-red-700 border border-red-400 hover:bg-red-200"
+                    }`}
+                  >
+                    {promo.isActive ? "Désactiver" : "Activer"}
+                  </button>
+                </td>
+                  <td className="px-6 py-4 text-center">
                     <button
-                      onClick={() => handleToggleStatus(promo.id)}
-                      className="text-gray-600 hover:text-gray-800"
-                      title="Changer le statut"
+                      onClick={() => handleEdit(promo)}
+                      title="Modifier"
+                      className="w-8 h-8 rounded-full border border-blue-400 flex items-center justify-center text-blue-600 hover:bg-blue-100 mx-auto"
                     >
-                      {promo.isActive ? <FaToggleOff size={20} /> : <FaToggleOn size={20} />}
+                      <LuPencil className="w-4 h-4" />
                     </button>
                   </td>
                 </tr>

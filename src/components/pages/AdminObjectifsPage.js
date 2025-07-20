@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-
+import { LuPencil } from "react-icons/lu";
 const AdminObjectifsPage = () => {
   const [commercials, setCommercials] = useState([]);
   const [objectifs, setObjectifs] = useState([]);
@@ -272,15 +272,28 @@ const goToPage = (page) => {
       {new Date(obj.dateDebut).toLocaleDateString()} -{" "}
       {new Date(obj.dateFin).toLocaleDateString()}
     </td>
-    <td className="border p-2">{obj.isActive ? "✅" : "❌"}</td>
+            <td className="border p-2 text-center">
+          <button
+            onClick={() => handleToggleStatus(obj.id)}
+            className={`px-3 py-1 text-sm font-semibold rounded-full ${
+              obj.isActive
+                ? "bg-green-100 text-green-700 border border-green-400 hover:bg-green-200"
+                : "bg-red-100 text-red-700 border border-red-400 hover:bg-red-200"
+            }`}
+          >
+            {obj.isActive ? "Désactiver" : "Activer"}
+          </button>
+        </td>
     <td className="border p-2 flex justify-center gap-2">
-      <button
-        onClick={() => handleToggleStatus(obj.id)}
-        className="text-yellow-600 hover:text-yellow-800"
-      >
-        🔄
-      </button>
-    </td>
+  {/* Bouton édition (prévu si besoin) */}
+  <button
+    title="Modifier"
+    className="w-8 h-8 rounded-full border border-blue-400 flex items-center justify-center text-blue-600 hover:bg-blue-100"
+    // onClick={() => handleEdit(obj)} // à activer si tu ajoutes une fonction d'édition
+  >
+    <LuPencil className="w-4 h-4" />
+  </button>
+</td>
   </tr>
 ))}
         </tbody>

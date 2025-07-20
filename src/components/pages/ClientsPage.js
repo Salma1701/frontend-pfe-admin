@@ -100,19 +100,43 @@ const ClientsPage = () => {
   setFilteredClients(result);
 };
 
-  const toggleStatus = async (id, currentStatus) => {
-    try {
-      await axios.put(
-        `http://localhost:4000/client/${id}/status`,
-        { isActive: !currentStatus },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      fetchClients();
-      toast.success(`Client ${!currentStatus ? "activé" : "désactivé"} avec succès.`);
-    } catch (err) {
-      toast.error("Erreur lors du changement de statut.");
-    }
-  };
+const toggleStatus = async (id, currentStatus) => {
+  try {
+    await axios({
+      method: 'put',
+      url: `http://localhost:4000/categorie-client/${id}/status`,
+      data: { isActive: !currentStatus }, // booléen natif
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      }
+    });
+    fetchCategories();
+    toast.success(`Catégorie ${!currentStatus ? "activée" : "désactivée"}`);
+  } catch (err) {
+    console.error("Erreur PUT statut catégorie:", err?.response?.data || err);
+    toast.error("Erreur lors du changement de statut");
+  }
+};
+
+const toggleClientStatus = async (id, currentStatus) => {
+  try {
+    await axios({
+      method: 'put',
+      url: `http://localhost:4000/client/${id}/status`,
+      data: { isActive: !currentStatus },
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      }
+    });
+    fetchClients();
+    toast.success(`Client ${!currentStatus ? "activé" : "désactivé"}`);
+  } catch (err) {
+    console.error("Erreur PUT statut client:", err?.response?.data || err);
+    toast.error("Erreur lors du changement de statut du client");
+  }
+};
 
   const openEditModal = (client) => {
     setSelectedClient(client);
@@ -228,59 +252,63 @@ const handleNext = () => {
           {filteredClients.length === 0 ? (
             <p className="text-gray-500 text-center py-6">Aucun client trouvé.</p>
           ) : (
-            <table className="min-w-full text-sm text-gray-800">
-              <thead className="bg-indigo-100 text-indigo-800">
-                <tr>
-                  <th className="px-6 py-3 font-semibold text-left">Nom</th>
-                  <th className="px-6 py-3 font-semibold text-left">Email</th>
-                  <th className="px-6 py-3 font-semibold text-left">Téléphone</th>
-                  <th className="px-6 py-3 font-semibold text-left">Code fiscal</th>
-                  <th className="px-6 py-3 font-semibold text-left">Adresse</th>
-                  <th className="px-6 py-3 font-semibold text-left">Catégorie</th>
-                  <th className="px-6 py-3 font-semibold text-left">Commercial</th>
-                  <th className="px-6 py-3 font-semibold text-left">Statut</th>
-                  <th className="px-6 py-3 font-semibold text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredClients
-                  .slice((currentPage - 1) * clientsPerPage, currentPage * clientsPerPage)
-                  .map((client, idx) => (
-                  <tr key={client.id} className={idx % 2 === 0 ? "bg-white" : "bg-gray-50"}>
-                    <td className="px-6 py-4 font-medium capitalize">{client.nom} {client.prenom}</td>
-                    <td className="px-6 py-4">{client.email}</td>
-                    <td className="px-6 py-4">{client.telephone}</td>
-                    <td className="px-6 py-4">{client.codeFiscale || "—"}</td>
-                    <td className="px-6 py-4">{client.adresse}</td>
-                    <td className="px-6 py-4">{client.categorie?.nom || "—"}</td>
-                    <td className="px-6 py-4">
-                      {client.commercial ? `${client.commercial.nom} ${client.commercial.prenom}` : "Non assigné"}
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className={`font-medium ${client.isActive ? "text-green-600" : "text-red-500"}`}>
-                        {client.isActive ? "✅ Actif" : "❌ Inactif"}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-right space-x-2">
-                      <button
-                        onClick={() => openEditModal(client)}
-                        className="text-gray-600 hover:text-gray-800"
-                        title="Modifier"
+            <div className="overflow-x-auto rounded-xl shadow-md">
+              <table className="min-w-full text-sm text-gray-800">
+                <thead className="bg-indigo-100 text-indigo-800">
+                  <tr>
+                    <th className="px-6 py-3 font-semibold text-left">Nom</th>
+                    <th className="px-6 py-3 font-semibold text-left">Email</th>
+                    <th className="px-6 py-3 font-semibold text-left">Téléphone</th>
+                    <th className="px-6 py-3 font-semibold text-left">Code fiscal</th>
+                    <th className="px-6 py-3 font-semibold text-left">Adresse</th>
+                    <th className="px-6 py-3 font-semibold text-left">Catégorie</th>
+                    <th className="px-6 py-3 font-semibold text-left">Commercial</th>
+                    <th className="px-6 py-3 font-semibold text-left">Ajouté par</th>
+                    <th className="px-6 py-3 font-semibold text-center">Statut</th>
+                    <th className="px-6 py-3 font-semibold text-center w-24">Actions</th>                  </tr>
+                </thead>
+                <tbody>
+                  {filteredClients
+                    .slice((currentPage - 1) * clientsPerPage, currentPage * clientsPerPage)
+                    .map((client, idx) => (
+                      <tr
+                        key={client.id}
+                        className={`transition hover:bg-indigo-50 ${idx % 2 === 0 ? "bg-white" : "bg-gray-50"}`}
                       >
-                        <LuPencil />
-                      </button>
-                      <button
-                        onClick={() => toggleStatus(client.id, client.isActive)}
-                        className="text-gray-600 hover:text-gray-800"
-                        title="Changer le statut"
-                      >
-                        {client.isActive ? <FaToggleOff size={20} /> : <FaToggleOn size={20} />}
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                        <td className="px-6 py-4 font-medium capitalize">{client.nom} {client.prenom}</td>
+                        <td className="px-6 py-4">{client.email}</td>
+                        <td className="px-6 py-4">{client.telephone}</td>
+                        <td className="px-6 py-4">{client.codeFiscale || "—"}</td>
+                        <td className="px-6 py-4">{client.adresse}</td>
+                        <td className="px-6 py-4">{client.categorie?.nom || "—"}</td>
+                        <td className="px-6 py-4">{client.commercial ? `${client.commercial.nom} ${client.commercial.prenom}` : "Non assigné"}</td>
+                        <td className="px-6 py-4">{client.commercial ? `${client.commercial.nom} ${client.commercial.prenom}` : "Admin"}</td>
+                        <td className="px-6 py-4 text-center">
+                          <button
+                            onClick={() => toggleClientStatus(client.id, client.isActive)}
+                            className={`px-3 py-1 text-sm font-semibold rounded-full ${
+                              client.isActive
+                                ? "bg-green-100 text-green-700 border border-green-400 hover:bg-green-200"
+                                : "bg-red-100 text-red-700 border border-red-400 hover:bg-red-200"
+                            }`}
+                          >
+                            {client.isActive ? "Désactiver" : "Activer"}
+                          </button>
+                        </td>
+                        <td className="px-6 py-4 text-center w-24">
+                          <button
+                            onClick={() => openEditModal(client)}
+                            title="Modifier"
+                            className="w-8 h-8 rounded-full border border-blue-400 flex items-center justify-center text-blue-600 hover:bg-blue-100 mx-auto"
+                          >
+                            <LuPencil className="w-4 h-4" />
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                </tbody>
+              </table>
+            </div>
           )}
          
 

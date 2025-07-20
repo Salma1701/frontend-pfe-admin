@@ -28,6 +28,7 @@ import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import ResetPassword from "./components/pages/ResetPassword";
 import ProductDetails from "./components/pages/ProductDetails";
+import AdminCategoriesClientsPage from "./components/pages/AdminCategoriesClientsPage";
 
 function LayoutWithSidebar({ children }) {
   return (
@@ -62,6 +63,7 @@ function AppContent() {
      
       <Route path="/units" element={<PrivateRoute><LayoutWithSidebar><UnitsPage /></LayoutWithSidebar></PrivateRoute>} />
       <Route path="/categories" element={<PrivateRoute><LayoutWithSidebar><CategoriesPage /></LayoutWithSidebar></PrivateRoute>} />
+      <Route path="/categories-clients" element={<PrivateRoute><LayoutWithSidebar><AdminCategoriesClientsPage /></LayoutWithSidebar></PrivateRoute>} />
       <Route path="/clients-list" element={<PrivateRoute><LayoutWithSidebar><ClientsPage /></LayoutWithSidebar></PrivateRoute>} />
       <Route path="/orders" element={<PrivateRoute><LayoutWithSidebar><Orders /></LayoutWithSidebar></PrivateRoute>} />
       <Route path="/invoices" element={<PrivateRoute><LayoutWithSidebar><InvoicesPage /></LayoutWithSidebar></PrivateRoute>} />

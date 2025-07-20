@@ -26,6 +26,7 @@ const Sidebar = () => {
     { to: "/invoices", label: "Bon de Commande", icon: <FaReceipt /> },
     { to: "/units", label: "Gestion des Unités", icon: <FaBalanceScale /> },
     { to: "/categories", label: "Gestion des Catégories", icon: <FaTags /> },
+    { to: "/categories-clients", label: "Catégories Clients", icon: <FaTags /> },
     { to: "/clients-list", label: "Liste des Clients", icon: <FaUserFriends /> },
     { to: "/promotions", label: "Promotions", icon: <FaTags /> },
     { to: "/objectifs", label: "Objectifs commerciaux", icon: <FaBalanceScale /> },
