@@ -1,10 +1,13 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { LuPencil } from "react-icons/lu";
+// Ajout du state pour l'édition
+
 const AdminObjectifsPage = () => {
+  const [editForm, setEditForm] = useState(null);
+  const [isEditing, setIsEditing] = useState(false);
   const [commercials, setCommercials] = useState([]);
   const [objectifs, setObjectifs] = useState([]);
-  const [filtrerGlobaux, setFiltrerGlobaux] = useState(false);
   const [form, setForm] = useState({
     commercialId: "",
     dateDebut: new Date().toISOString().slice(0, 10),
@@ -15,17 +18,18 @@ const AdminObjectifsPage = () => {
   });
 const [currentPage, setCurrentPage] = useState(1);
 const itemsPerPage = 5; // Nombre d'objectifs par page
-
+const [filtreAtteint, setFiltreAtteint] = useState(false);
+// N'afficher que les objectifs commerciaux (pas globaux)
+const objectifsCommerciaux = objectifs.filter((obj) => obj.commercial);
+const objectifsFiltres = objectifsCommerciaux.filter((obj) =>
+  filtreAtteint ? (obj.isAtteint !== undefined ? obj.isAtteint : (obj.montantRealise !== undefined ? obj.montantRealise >= obj.montantCible : false)) : true
+);
 const getPaginatedObjectifs = () => {
-  const filtered = objectifs.filter((obj) => (filtrerGlobaux ? !obj.commercial : true));
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
-  return filtered.slice(startIndex, endIndex);
+  return objectifsFiltres.slice(startIndex, endIndex);
 };
-
-const totalPages = Math.ceil(
-  objectifs.filter((obj) => (filtrerGlobaux ? !obj.commercial : true)).length / itemsPerPage
-);
+const totalPages = Math.ceil(objectifsFiltres.length / itemsPerPage);
 
 const goToPage = (page) => {
   if (page >= 1 && page <= totalPages) {
@@ -85,42 +89,6 @@ const goToPage = (page) => {
     }
   };
 
-  const handleGlobalSubmit = async () => {
-    try {
-      if (form.commercialId) {
-        alert("❌ Ne sélectionne pas de commercial pour un objectif global !");
-        return;
-      }
-
-      const payload = {
-        dateDebut: form.dateDebut,
-        dateFin: form.dateFin,
-        montantCible: Number(form.montantCible),
-        prime: Number(form.prime),
-        mission: form.mission || undefined,
-      };
-
-      const res = await fetch(`${API_BASE}/objectifs/global`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(payload),
-      });
-
-      if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.message || "Erreur inconnue");
-      }
-
-      await fetchObjectifs();
-      alert("✅ Objectif global ajouté !");
-    } catch (err) {
-      alert("❌ Erreur ajout objectif global : " + err.message);
-    }
-  };
-
   const handleToggleStatus = async (id) => {
     try {
       await axios.put(`${API_BASE}/objectifs/${id}/status`, {}, headers);
@@ -128,6 +96,11 @@ const goToPage = (page) => {
     } catch (err) {
       alert("Erreur changement de statut : " + err.response?.data?.message);
     }
+  };
+
+  const handleEdit = (obj) => {
+    setEditForm({ ...obj });
+    setIsEditing(true);
   };
 
   return (
@@ -217,27 +190,21 @@ const goToPage = (page) => {
           <button type="submit" className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
             Ajouter
           </button>
-          <button
-            type="button"
-            onClick={handleGlobalSubmit}
-            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-          >
-            Objectif Global
-          </button>
         </div>
       </form>
 
       <hr className="my-8" />
       <h3 className="text-xl font-semibold mb-4">📋 Liste des Objectifs</h3>
-      <div className="mb-4">
+      {/* Filtre objectifs atteints */}
+      <div className="mb-4 flex items-center gap-6">
         <label className="inline-flex items-center">
           <input
             type="checkbox"
             className="form-checkbox h-4 w-4 text-blue-600"
-            checked={filtrerGlobaux}
-            onChange={(e) => setFiltrerGlobaux(e.target.checked)}
+            checked={filtreAtteint}
+            onChange={(e) => setFiltreAtteint(e.target.checked)}
           />
-          <span className="ml-2 text-sm text-gray-700">Afficher uniquement les objectifs globaux</span>
+          <span className="ml-2 text-sm text-gray-700">Afficher uniquement les objectifs atteints</span>
         </label>
       </div>
 
@@ -248,6 +215,8 @@ const goToPage = (page) => {
             <th className="border p-2">Cible (€)</th>
             <th className="border p-2">Prime (€)</th>
             <th className="border p-2">Période</th>
+            <th className="border p-2">Mission</th>
+            <th className="border p-2">Atteint</th>
             <th className="border p-2">Statut</th>
             <th className="border p-2">Actions</th>
           </tr>
@@ -272,6 +241,8 @@ const goToPage = (page) => {
       {new Date(obj.dateDebut).toLocaleDateString()} -{" "}
       {new Date(obj.dateFin).toLocaleDateString()}
     </td>
+    <td className="border p-2">{obj.mission || '-'}</td>
+    <td className="border p-2">{(obj.isAtteint !== undefined ? obj.isAtteint : (obj.montantRealise !== undefined ? obj.montantRealise >= obj.montantCible : false)) ? 'Oui' : 'Non'}</td>
             <td className="border p-2 text-center">
           <button
             onClick={() => handleToggleStatus(obj.id)}
@@ -285,11 +256,10 @@ const goToPage = (page) => {
           </button>
         </td>
     <td className="border p-2 flex justify-center gap-2">
-  {/* Bouton édition (prévu si besoin) */}
   <button
     title="Modifier"
     className="w-8 h-8 rounded-full border border-blue-400 flex items-center justify-center text-blue-600 hover:bg-blue-100"
-    // onClick={() => handleEdit(obj)} // à activer si tu ajoutes une fonction d'édition
+    onClick={() => handleEdit(obj)}
   >
     <LuPencil className="w-4 h-4" />
   </button>
@@ -304,8 +274,8 @@ const goToPage = (page) => {
     {objectifs.length > 0 && (
       <>
         {(currentPage - 1) * itemsPerPage + 1} –{" "}
-        {Math.min(currentPage * itemsPerPage, objectifs.filter((obj) => (filtrerGlobaux ? !obj.commercial : true)).length)}{" "}
-        sur {objectifs.filter((obj) => (filtrerGlobaux ? !obj.commercial : true)).length} éléments
+        {Math.min(currentPage * itemsPerPage, objectifs.filter((obj) => (filtreAtteint ? !obj.commercial : true)).length)}{" "}
+        sur {objectifs.filter((obj) => (filtreAtteint ? !obj.commercial : true)).length} éléments
       </>
     )}
   </div>
@@ -341,6 +311,96 @@ const goToPage = (page) => {
     </button>
   </div>
 </div>
+
+{/* Formulaire d'édition d'objectif */}
+{isEditing && editForm && (
+  <div className="mt-6 bg-white shadow-xl p-6 rounded-xl">
+    <h3 className="font-semibold text-lg mb-4">Modifier Objectif</h3>
+    <form
+      onSubmit={async (e) => {
+        e.preventDefault();
+        try {
+          await axios.put(
+            `${API_BASE}/objectifs/${editForm.id}`,
+            editForm,
+            headers
+          );
+          setIsEditing(false);
+          setEditForm(null);
+          fetchObjectifs();
+          alert("Objectif modifié !");
+        } catch (err) {
+          alert("Erreur modification : " + err.response?.data?.message);
+        }
+      }}
+      className="grid grid-cols-1 md:grid-cols-2 gap-4"
+    >
+      <input
+        name="montantCible"
+        type="number"
+        value={editForm.montantCible}
+        onChange={(e) =>
+          setEditForm({ ...editForm, montantCible: e.target.value })
+        }
+        className="border p-2 rounded w-full"
+      />
+      <input
+        name="prime"
+        type="number"
+        value={editForm.prime}
+        onChange={(e) =>
+          setEditForm({ ...editForm, prime: e.target.value })
+        }
+        className="border p-2 rounded w-full"
+      />
+      <input
+        name="dateDebut"
+        type="date"
+        value={editForm.dateDebut.split('T')[0]}
+        onChange={(e) =>
+          setEditForm({ ...editForm, dateDebut: e.target.value })
+        }
+        className="border p-2 rounded w-full"
+      />
+      <input
+        name="dateFin"
+        type="date"
+        value={editForm.dateFin.split('T')[0]}
+        onChange={(e) =>
+          setEditForm({ ...editForm, dateFin: e.target.value })
+        }
+        className="border p-2 rounded w-full"
+      />
+      <input
+        name="mission"
+        type="text"
+        value={editForm.mission}
+        onChange={(e) =>
+          setEditForm({ ...editForm, mission: e.target.value })
+        }
+        className="border p-2 rounded w-full md:col-span-2"
+      />
+      <div className="md:col-span-2 flex justify-end gap-2 mt-4">
+        <button
+          type="button"
+          onClick={() => {
+            setIsEditing(false);
+            setEditForm(null);
+          }}
+          className="px-4 py-2 text-gray-600"
+        >
+          Annuler
+        </button>
+        <button
+          type="submit"
+          className="px-4 py-2 bg-indigo-600 text-white rounded"
+        >
+          Enregistrer
+        </button>
+      </div>
+    </form>
+  </div>
+)}
 
     </div>
   );

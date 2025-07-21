@@ -45,6 +45,7 @@ const promotionsPerPage = 10;
   };
 
   const handleEdit = (promo) => {
+    console.log("edit", promo);
     setEditForm(promo);
     setIsEditing(true);
   };
@@ -118,6 +119,8 @@ const indexOfLast = currentPage * promotionsPerPage;
 const indexOfFirst = indexOfLast - promotionsPerPage;
 const currentPromotions = promotions.slice(indexOfFirst, indexOfLast);
 const totalPages = Math.ceil(promotions.length / promotionsPerPage);
+  console.log("AdminPromotionsPage loaded");
+  console.log("currentPromotions", currentPromotions);
   return (
     <div className="p-8 bg-gradient-to-br from-gray-50 to-blue-50 min-h-screen font-[Inter]">
       <ToastContainer position="top-right" autoClose={3000} />

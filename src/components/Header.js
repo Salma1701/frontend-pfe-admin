@@ -34,7 +34,7 @@ const Header = () => {
   };
 
   return (
-    <header className="bg-white shadow-md px-6 py-4 flex justify-between items-center sticky top-0 z-50">
+    <header className="bg-white shadow-md px-6 py-4 flex justify-between items-center">
       {/* Logo / Titre */}
       <div className="text-2xl font-bold text-indigo-600">
         Digital Process Distribution

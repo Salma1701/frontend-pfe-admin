@@ -8,6 +8,7 @@ import { useState, useEffect } from "react";
 
 const Sidebar = () => {
   const [openVisite, setOpenVisite] = useState(false);
+  const [openClients, setOpenClients] = useState(false); // Added state for Clients submenu
   const location = useLocation();
 
   // Ouvrir automatiquement le sous-menu si l’URL est /raisons-visite
@@ -39,22 +40,13 @@ const Sidebar = () => {
     <div className="h-screen w-64 bg-gray-900 text-white flex flex-col p-4 fixed top-0 left-0 overflow-y-auto shadow-lg">
       <h1 className="text-xl font-bold mb-8">Digital Process</h1>
 
-      <nav className="flex flex-col gap-4">
-        {links.map(({ to, label, icon }) => (
-          <NavLink
-            key={to}
-            to={to}
-            className={({ isActive }) =>
-              `flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-200 ${
-                isActive ? "bg-blue-600 text-white" : "hover:bg-blue-500 hover:text-white"
-              }`
-            }
-          >
-            {icon} {label}
-          </NavLink>
-        ))}
-
-        {/* Bloc Visite avec lien vers /visite + toggle sous-menu */}
+      <nav className="flex flex-col gap-2">
+        <NavLink to="/" className={({ isActive }) => `flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-200 ${isActive ? "bg-blue-600 text-white" : "hover:bg-blue-500 hover:text-white"}` }><FaReceipt /> Dashboard</NavLink>
+        <NavLink to="/products" className={({ isActive }) => `flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-200 ${isActive ? "bg-blue-600 text-white" : "hover:bg-blue-500 hover:text-white"}` }><FaBoxOpen /> Produits</NavLink>
+        <NavLink to="/users" className={({ isActive }) => `flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-200 ${isActive ? "bg-blue-600 text-white" : "hover:bg-blue-500 hover:text-white"}` }><FaUsers /> Utilisateurs</NavLink>
+        <NavLink to="/orders" className={({ isActive }) => `flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-200 ${isActive ? "bg-blue-600 text-white" : "hover:bg-blue-500 hover:text-white"}` }><FaShoppingCart /> Commandes</NavLink>
+        <NavLink to="/invoices" className={({ isActive }) => `flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-200 ${isActive ? "bg-blue-600 text-white" : "hover:bg-blue-500 hover:text-white"}` }><FaReceipt /> Bon de Commande</NavLink>
+        {/* Bloc Visite avec sous-menu, juste après Bon de Commande */}
         <div className="flex flex-col">
           <NavLink
             to="/visite"
@@ -70,8 +62,6 @@ const Sidebar = () => {
             </div>
             {openVisite ? <FaChevronDown /> : <FaChevronRight />}
           </NavLink>
-
-          {/* Sous-menu Raisons de visite */}
           {openVisite && (
             <NavLink
               to="/raisons-visite"
@@ -85,6 +75,34 @@ const Sidebar = () => {
             </NavLink>
           )}
         </div>
+        {/* Sous-menu Clients après Visite */}
+        <div className="flex flex-col">
+          <button
+            type="button"
+            onClick={() => setOpenClients((prev) => !prev)}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-200 cursor-pointer focus:outline-none text-left w-full"
+            style={{ background: openClients ? '#2563eb' : 'transparent', color: openClients ? 'white' : '' }}
+          >
+            <FaUserFriends /> <span>Clients</span> {openClients ? <FaChevronDown /> : <FaChevronRight />}
+          </button>
+          {openClients && (
+            <div className="ml-8 flex flex-col gap-1 mt-1">
+              <NavLink to="/clients-list" className={({ isActive }) => `flex items-center gap-2 px-2 py-1 rounded transition-all duration-200 text-sm ${isActive ? "bg-blue-600 text-white" : "hover:bg-blue-500 hover:text-white text-gray-300"}` }>
+                Liste des Clients
+              </NavLink>
+              <NavLink to="/categories-clients" className={({ isActive }) => `flex items-center gap-2 px-2 py-1 rounded transition-all duration-200 text-sm ${isActive ? "bg-blue-600 text-white" : "hover:bg-blue-500 hover:text-white text-gray-300"}` }>
+                Catégories Clients
+              </NavLink>
+            </div>
+          )}
+        </div>
+        <NavLink to="/objectifs" className={({ isActive }) => `flex items-center gap-2 px-4  py-2 rounded-lg transition-all duration-200 ${isActive ? "bg-blue-600 text-white" : "hover:bg-blue-500 hover:text-white"}` }><FaBalanceScale /> Objectifs commerciaux</NavLink>
+        {/* Le reste du menu */}
+        <NavLink to="/promotions" className={({ isActive }) => `flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-200 ${isActive ? "bg-blue-600 text-white" : "hover:bg-blue-500 hover:text-white"}` }><FaTags /> Promotions</NavLink>
+        <NavLink to="/units" className={({ isActive }) => `flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-200 ${isActive ? "bg-blue-600 text-white" : "hover:bg-blue-500 hover:text-white"}` }><FaBalanceScale /> Gestion des Unités</NavLink>
+        <NavLink to="/categories" className={({ isActive }) => `flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-200 ${isActive ? "bg-blue-600 text-white" : "hover:bg-blue-500 hover:text-white"}` }><FaTags /> Gestion des Catégories</NavLink>
+        <NavLink to="/satisfaction" className={({ isActive }) => `flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-200 ${isActive ? "bg-blue-600 text-white" : "hover:bg-blue-500 hover:text-white"}` }><FaReceipt /> Enquêtes Satisfaction</NavLink>
+        <NavLink to="/map-commercials" className={({ isActive }) => `flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-200 ${isActive ? "bg-blue-600 text-white" : "hover:bg-blue-500 hover:text-white"}` }><FaTruck /> Carte Commerciaux</NavLink>
       </nav>
     </div>
   );
