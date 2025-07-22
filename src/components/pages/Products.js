@@ -193,7 +193,7 @@ const Products = () => {
       onClick={() => setShowAddModal(true)}
       className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-md text-base font-medium flex items-center gap-2 shadow"
     >
-      <FaPlus className="text-white" /> Ajouter utilisateur
+      <FaPlus className="text-white" /> Ajouter Produit
     </button>
   </div>
 </div>

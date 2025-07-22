@@ -89,7 +89,7 @@ const AddProductForm = ({ onClose }) => {
       <label className="font-semibold">Catégorie</label>
       <select value={categorieId} onChange={(e) => setCategorieId(e.target.value)} className="border rounded px-3 py-2" required>
         <option value="">Choisir une catégorie</option>
-        {categories.map((cat) => (
+        {categories.filter(cat => cat.isActive).map((cat) => (
           <option key={cat.id} value={cat.nom}>{cat.nom}</option>
         ))}
       </select>
@@ -97,7 +97,7 @@ const AddProductForm = ({ onClose }) => {
       <label className="font-semibold">Unité</label>
       <select value={uniteNom} onChange={(e) => setUniteNom(e.target.value)} className="border rounded px-3 py-2" required>
         <option value="">Choisir une unité</option>
-        {unites.map((unit) => (
+        {unites.filter(unit => unit.isActive).map((unit) => (
           <option key={unit.id} value={unit.nom}>{unit.nom}</option>
         ))}
       </select>

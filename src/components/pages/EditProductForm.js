@@ -18,18 +18,18 @@ const EditProductForm = ({ product, onClose, refreshProducts }) => {
   const prixTTC = (Number(prixUnitaire) + (Number(prixUnitaire) * Number(tva) / 100)).toFixed(2);
 
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchCategoriesAndUnites = async () => {
       try {
-        const resCategories = await axios.get("/categories");
+        const resCategories = await axios.get('/categories');
         setCategories(resCategories.data);
-        const resUnites = await axios.get("/unite");
+        const resUnites = await axios.get('/unite');
         setUnites(resUnites.data.data || []);
       } catch (error) {
         console.error(error);
         toast.error("❌ Erreur chargement catégories/unités.");
       }
     };
-    fetchData();
+    fetchCategoriesAndUnites();
   }, []);
 
   const handleSubmit = async (e) => {
@@ -47,7 +47,7 @@ const EditProductForm = ({ product, onClose, refreshProducts }) => {
   formData.append("tva", String(Number(tva)));
   formData.append("colisage", String(Number(colisage)));
   formData.append("categorieId", categorieId);
-  formData.append("uniteId", uniteNom);
+  formData.append('uniteId', uniteNom);
 
   for (let img of images) {
     formData.append("images", img);
@@ -92,9 +92,9 @@ const EditProductForm = ({ product, onClose, refreshProducts }) => {
 
       <label className="font-semibold">Prix unitaire HT</label>
       <input
-        type="number"
+        type="text"
         value={prixUnitaire}
-        onChange={(e) => setPrixUnitaire(e.target.value)}
+        onChange={(e) => setPrixUnitaire(e.target.value.replace(',', '.'))}
         className="border rounded px-3 py-2"
         min="0"
         required
@@ -144,17 +144,10 @@ const EditProductForm = ({ product, onClose, refreshProducts }) => {
       </select>
 
       <label className="font-semibold">Unité</label>
-      <select
-        value={uniteNom}
-        onChange={(e) => setUniteNom(e.target.value)}
-        className="border rounded px-3 py-2"
-        required
-      >
+      <select value={uniteNom} onChange={(e) => setUniteNom(e.target.value)} className="border rounded px-3 py-2" required>
         <option value="">Choisir une unité</option>
-        {unites.map((unit) => (
-          <option key={unit.id} value={unit.nom}>
-            {unit.nom}
-          </option>
+        {unites.filter(unit => unit.isActive).map((unit) => (
+          <option key={unit.id} value={unit.nom}>{unit.nom}</option>
         ))}
       </select>
 

@@ -40,7 +40,8 @@ const AddSurveyPage = ({ onClose, survey, isEdit }) => {
   const isDateDebutValid = dateDebut.trim() !== '';
   const isDateFinValid = dateFin.trim() !== '';
   const isZoneValid = selectedZone.trim() !== '';
-  const isCommercialValid = selectedCommercial.trim() !== '';
+  const isCommercialValid = selectedCommercial !== '' && selectedCommercial !== null && selectedCommercial !== undefined;
+
   const isClientsValid = selectedClients.length > 0;
 
   // Charger les commerciaux (avec zone)
@@ -244,7 +245,9 @@ const AddSurveyPage = ({ onClose, survey, isEdit }) => {
             className={`border rounded px-3 py-2 mb-2 w-full ${!isCommercialValid && touchedDest.commercial ? 'border-red-500' : ''}`}
           >
             <option value="">Choisir un commercial</option>
-            {filteredCommerciaux.map(c => <option key={c.id} value={c.id}>{c.nom} {c.prenom} ({c.zone})</option>)}
+            {filteredCommerciaux.map(c => <option key={c.id} value={String(c.id)}>
+              {c.nom} {c.prenom} ({c.zone})
+            </option>)}
           </select>
           {!isCommercialValid && touchedDest.commercial && <div className="text-red-500 text-sm mb-2">Le commercial est obligatoire</div>}
           <label>
