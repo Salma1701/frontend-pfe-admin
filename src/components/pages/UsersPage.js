@@ -159,6 +159,11 @@ const UsersPage = () => {
           delete updateData.password;
         }
         
+        // Nettoyer le numéro de téléphone des espaces
+        if (updateData.tel) {
+          updateData.tel = updateData.tel.replace(/\s+/g, '');
+        }
+        
         await axios.put(
           `http://localhost:4000/users/${editUserId}`,
           updateData,
@@ -166,9 +171,22 @@ const UsersPage = () => {
         );
         toast.success("Utilisateur modifié avec succès.");
       } else {
+        // Préparer les données pour l'envoi
+        const sendData = { ...form };
+        
+        // Nettoyer le numéro de téléphone des espaces
+        if (sendData.tel) {
+          sendData.tel = sendData.tel.replace(/\s+/g, '');
+        }
+        
+        // Déterminer l'endpoint selon le rôle
+        const endpoint = form.role === 'admin' 
+          ? "http://localhost:4000/users/create-admin"
+          : "http://localhost:4000/users/create-commercial";
+        
         await axios.post(
-          "http://localhost:4000/users/commercial",
-          form,
+          endpoint,
+          sendData,
           { headers: { Authorization: `Bearer ${token}` } }
         );
         toast.success("Utilisateur ajouté avec succès.");

@@ -58,6 +58,12 @@ const AddSurveyPage = ({ onClose, survey, isEdit }) => {
     }
   }, [selectedCommercial]);
 
+  // Réinitialiser le commercial sélectionné quand la zone change
+  useEffect(() => {
+    setSelectedCommercial("");
+    setSelectedClients([]);
+  }, [selectedZone]);
+
   // Pré-remplir les questions et affectations si édition
   useEffect(() => {
     if (survey && isEdit) {
@@ -243,13 +249,27 @@ const AddSurveyPage = ({ onClose, survey, isEdit }) => {
             onChange={e => setSelectedCommercial(e.target.value)}
             onBlur={() => setTouchedDest(t => ({ ...t, commercial: true }))}
             className={`border rounded px-3 py-2 mb-2 w-full ${!isCommercialValid && touchedDest.commercial ? 'border-red-500' : ''}`}
+            disabled={filteredCommerciaux.length === 0}
           >
-            <option value="">Choisir un commercial</option>
+            <option value="">
+              {filteredCommerciaux.length === 0 
+                ? "Aucun commercial disponible pour cette zone" 
+                : "Choisir un commercial"
+              }
+            </option>
             {filteredCommerciaux.map(c => <option key={c.id} value={String(c.id)}>
-              {c.nom} {c.prenom} ({c.zone})
+              {c.nom} {c.prenom} {c.zone ? `(${c.zone})` : '(Zone non définie)'}
             </option>)}
           </select>
-          {!isCommercialValid && touchedDest.commercial && <div className="text-red-500 text-sm mb-2">Le commercial est obligatoire</div>}
+          {filteredCommerciaux.length === 0 && selectedZone && (
+            <div className="text-orange-600 text-sm mb-2">
+              ⚠️ Aucun commercial n'est assigné à la zone "{selectedZone}". 
+              {selectedZone === "Toutes" ? " Veuillez sélectionner une zone spécifique." : " Veuillez sélectionner une autre zone ou assigner des commerciaux à cette zone."}
+            </div>
+          )}
+          {!isCommercialValid && touchedDest.commercial && filteredCommerciaux.length > 0 && (
+            <div className="text-red-500 text-sm mb-2">Le commercial est obligatoire</div>
+          )}
           <label>
             Clients <span className="text-xs text-gray-500">(Ctrl/Cmd + clic pour sélectionner plusieurs)</span>
           </label>
@@ -270,6 +290,13 @@ const AddSurveyPage = ({ onClose, survey, isEdit }) => {
             onClick={async () => {
               setTouchedDest({ zone: true, commercial: true, clients: true });
               if (!isZoneValid || !isCommercialValid || !isClientsValid) return;
+              
+              // Vérification supplémentaire pour les commerciaux disponibles
+              if (filteredCommerciaux.length === 0) {
+                toast.error("Aucun commercial disponible pour la zone sélectionnée. Veuillez sélectionner une autre zone.");
+                return;
+              }
+              
               await handleSubmit();
             }}
           >Créer l'enquête</button>
