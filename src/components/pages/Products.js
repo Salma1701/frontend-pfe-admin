@@ -261,8 +261,8 @@ const Products = () => {
           <th className="py-2 px-4 text-left">Unité</th>
           <th className="py-2 px-4 text-left">Prix TTC (€)</th>
           <th className="py-2 px-4 text-left">TVA</th>
-          <th className="py-2 px-4 text-left">Statut</th>
-          <th className="py-2 px-4 text-left">Actions</th>
+          <th className="py-2 px-4 text-center">Statut</th>
+          <th className="py-2 px-4 text-center">Actions</th>
         </tr>
       </thead>
       <tbody className="text-sm">
@@ -279,32 +279,34 @@ const Products = () => {
               {Number(prod.prix_unitaire_ttc).toFixed(2)} €
             </td>
             <td className="py-2 px-4">{prod.tva ?? "—"}</td>
-            <td className="py-2 px-4">
+            <td className="py-2 px-4 text-center">
               {prod.isActive ? (
                 <span className="text-green-600 font-semibold">Actif</span>
               ) : (
                 <span className="text-red-600 font-semibold">Inactif</span>
               )}
             </td>
-            <td className="py-2 px-4 space-x-2" onClick={(e) => e.stopPropagation()}>
-              <button
-                onClick={() => {
-                  setSelectedProduct(prod);
-                  setShowEditModal(true);
-                }}
-                className="bg-yellow-400 hover:bg-yellow-500 text-white px-2 py-1 rounded text-sm"
-              >
-                <FaEdit />
-              </button>
-              <button
-                onClick={() => toggleProductStatus(prod.id, prod.isActive)}
-                disabled={loadingToggleId === prod.id}
-                className={`px-2 py-1 rounded text-sm text-white ${
-                  prod.isActive ? "bg-green-600 hover:bg-green-700" : "bg-red-600 hover:bg-red-700"
-                }`}
-              >
-                {loadingToggleId === prod.id ? "..." : prod.isActive ? "✓" : "✕"}
-              </button>
+            <td className="py-2 px-4 text-center" onClick={(e) => e.stopPropagation()}>
+              <div className="flex items-center justify-center gap-2">
+                <button
+                  onClick={() => {
+                    setSelectedProduct(prod);
+                    setShowEditModal(true);
+                  }}
+                  className="bg-yellow-400 hover:bg-yellow-500 text-white px-2 py-1 rounded text-sm"
+                >
+                  <FaEdit />
+                </button>
+                <button
+                  onClick={() => toggleProductStatus(prod.id, prod.isActive)}
+                  disabled={loadingToggleId === prod.id}
+                  className={`px-2 py-1 rounded text-sm text-white ${
+                    prod.isActive ? "bg-green-600 hover:bg-green-700" : "bg-red-600 hover:bg-red-700"
+                  }`}
+                >
+                  {loadingToggleId === prod.id ? "..." : prod.isActive ? "✓" : "✕"}
+                </button>
+              </div>
             </td>
           </tr>
         ))}

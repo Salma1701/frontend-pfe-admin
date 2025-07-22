@@ -114,7 +114,7 @@ const handlePrev = () => {
               <th className="py-3 px-6 text-left">Date</th>
               <th className="py-3 px-6 text-left">Prix TTC</th>
               <th className="py-3 px-6 text-left">Prix HT</th>
-              <th className="py-3 px-6 text-left">Statut</th>
+              <th className="py-3 px-6 text-center">Statut</th>
               <th className="py-3 px-6 text-center">Actions</th>
             </tr>
           </thead>
@@ -142,7 +142,7 @@ const handlePrev = () => {
                       ? `${Number(commande.prix_hors_taxe).toFixed(2)} €`
                       : "—"}
                   </td>
-                  <td className="py-3 px-6">
+                  <td className="py-3 px-6 text-center">
                     {commande.statut === "validée" ? (
                       <span className="bg-green-100 text-green-800 text-xs font-semibold px-2.5 py-0.5 rounded">
                         Validée
@@ -154,20 +154,22 @@ const handlePrev = () => {
                     )}
                   </td>
                   <td className="py-3 px-6 text-center">
-                    <Link
-                      to={`/bande-de-commande/${commande.id}`}
-                      className="text-indigo-600 hover:text-indigo-800 mr-3"
-                      title="Voir la commande"
-                    >
-                      <FaEye className="inline-block text-lg" />
-                    </Link>
-                    <button
-                      onClick={() => deleteOrder(commande.id)}
-                      className="text-red-500 hover:text-red-700"
-                      title="Supprimer"
-                    >
-                      <FaTrash />
-                    </button>
+                    <div className="flex items-center justify-center gap-2">
+                      <Link
+                        to={`/bande-de-commande/${commande.id}`}
+                        className="text-indigo-600 hover:text-indigo-800"
+                        title="Voir la commande"
+                      >
+                        <FaEye className="inline-block text-lg" />
+                      </Link>
+                      <button
+                        onClick={() => deleteOrder(commande.id)}
+                        className="text-red-500 hover:text-red-700"
+                        title="Supprimer"
+                      >
+                        <FaTrash />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))

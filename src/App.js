@@ -1,5 +1,5 @@
 import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom";
-import { Fragment } from "react";
+import { Fragment, useState, useEffect } from "react";
 import Login from "./components/pages/Login";
 import Dashboard from "./components/pages/Dashboard";
 import Products from "./components/pages/Products";
@@ -31,13 +31,56 @@ import ProductDetails from "./components/pages/ProductDetails";
 import AdminCategoriesClientsPage from "./components/pages/AdminCategoriesClientsPage";
 
 function LayoutWithSidebar({ children }) {
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkIsMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    checkIsMobile();
+    window.addEventListener('resize', checkIsMobile);
+
+    return () => window.removeEventListener('resize', checkIsMobile);
+  }, []);
+
+  const toggleSidebar = () => {
+    setSidebarOpen(!sidebarOpen);
+  };
+
+  const closeSidebar = () => {
+    if (isMobile) {
+      setSidebarOpen(false);
+    }
+  };
+
   return (
-    <div className="flex">
-      <Sidebar />
-      <div className="flex-1 flex flex-col min-h-screen ml-64 bg-gray-100">
-        <Header />
+    <div className="flex h-screen bg-gray-100">
+      {/* Overlay pour mobile */}
+      {sidebarOpen && isMobile && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
+          onClick={closeSidebar}
+        />
+      )}
+      
+      {/* Sidebar */}
+      <div className={`
+        sidebar-responsive
+        ${sidebarOpen ? 'open' : ''}
+        bg-white shadow-lg
+      `}>
+        <Sidebar onClose={closeSidebar} />
+      </div>
+      
+      {/* Main content */}
+      <div className="main-content-responsive flex flex-col">
+        <Header onMenuClick={toggleSidebar} />
         <Navbar />
-        <main className="flex-1 p-6 overflow-y-auto">{children}</main>
+        <main className="flex-1 p-4 sm:p-6 overflow-y-auto responsive-container">
+          {children}
+        </main>
       </div>
     </div>
   );

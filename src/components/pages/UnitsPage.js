@@ -20,6 +20,7 @@ const UnitsPage = () => {
   const [editUnit, setEditUnit] = useState(null);
   const [editUnitName, setEditUnitName] = useState("");
   const [isEditing, setIsEditing] = useState(false);
+  const [showAddRow, setShowAddRow] = useState(false);
 
   const token = localStorage.getItem("token");
 
@@ -63,8 +64,7 @@ const UnitsPage = () => {
 
   const totalPages = Math.ceil(total / UNITS_PER_PAGE);
 
-  const addUnit = async (e) => {
-    e.preventDefault();
+  const addUnit = async () => {
     if (!newUnit.trim()) return toast.error("Le nom de l'unité est requis.");
     setIsAdding(true);
     try {
@@ -75,7 +75,7 @@ const UnitsPage = () => {
       );
       toast.success("Unité ajoutée !");
       setNewUnit("");
-      setShowAddModal(false);
+      setShowAddRow(false);
       fetchUnits(currentPage, search);
     } catch (err) {
       toast.error(getErrorMessage(err, "Erreur ajout unité"));
@@ -132,19 +132,19 @@ const UnitsPage = () => {
         <h2 className="text-3xl font-extrabold text-indigo-700 flex items-center gap-3">
           <FaBalanceScale className="text-indigo-500" /> Gestion des Unités
         </h2>
-        <div className="flex flex-col sm:flex-row items-center gap-3">
+        <div className="flex items-center gap-3">
           <input
             type="text"
-            placeholder=" Rechercher..."
+            placeholder="Rechercher..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-64 px-3 py-1.5 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
+            className="border border-gray-300 rounded px-4 py-2 w-full max-w-xs"
           />
           <button
-            onClick={() => setShowAddModal(true)}
-            className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded shadow hover:bg-indigo-700 transition"
+            onClick={() => setShowAddRow(!showAddRow)}
+            className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded flex items-center gap-2"
           >
-            <FaPlus /> Ajouter une unité
+            {showAddRow ? "Annuler" : "Ajouter"}
           </button>
         </div>
       </div>
@@ -163,6 +163,46 @@ const UnitsPage = () => {
               </tr>
             </thead>
             <tbody>
+              {/* Ligne d'ajout */}
+              {showAddRow && (
+                <tr className="bg-blue-50 border-b">
+                  <td className="px-6 py-4">
+                    <input
+                      type="text"
+                      placeholder="Nom de la nouvelle unité"
+                      value={newUnit}
+                      onChange={(e) => setNewUnit(e.target.value)}
+                      className="border border-gray-300 rounded px-3 py-2 w-full"
+                      onKeyPress={(e) => e.key === 'Enter' && addUnit()}
+                    />
+                  </td>
+                  <td className="px-6 py-4 text-center">
+                    <span className="text-gray-500 text-sm">Nouvelle</span>
+                  </td>
+                  <td className="px-6 py-4 text-center">
+                    <div className="flex items-center justify-center gap-2">
+                      <button
+                        onClick={addUnit}
+                        disabled={isAdding}
+                        className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-sm"
+                      >
+                        {isAdding ? "Ajout..." : "Sauvegarder"}
+                      </button>
+                      <button
+                        onClick={() => {
+                          setShowAddRow(false);
+                          setNewUnit("");
+                        }}
+                        className="bg-gray-500 hover:bg-gray-600 text-white px-3 py-1 rounded text-sm"
+                      >
+                        Annuler
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              )}
+              
+              {/* Unités existantes */}
               {units.map((unit, idx) => (
                 <tr key={unit.id} className={idx % 2 === 0 ? "bg-white" : "bg-gray-50"}>
                   <td className="px-6 py-4 font-medium capitalize">{unit.nom}</td>

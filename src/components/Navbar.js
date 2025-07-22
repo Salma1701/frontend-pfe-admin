@@ -1,175 +1,205 @@
 import { NavLink } from "react-router-dom";
 import {
   FaChartBar, FaBox, FaUsers, FaClipboardList, FaClipboardCheck,
-  FaTags, FaMapMarkerAlt, FaBullseye, FaBars, FaTimes
+  FaTags, FaMapMarkerAlt, FaBullseye, FaBars, FaTimes, FaChevronDown
 } from "react-icons/fa";
 import { useState } from "react";
-// plus besoin de useState
 
 const Navbar = () => {
-  // const [openClients, setOpenClients] = useState(false);
-  // const [openVisite, setOpenVisite] = useState(false);
-  // const [openCommandes, setOpenCommandes] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [openSubmenu, setOpenSubmenu] = useState(null);
+
+  const toggleSubmenu = (menu) => {
+    setOpenSubmenu(openSubmenu === menu ? null : menu);
+  };
+
+  const closeMobileMenu = () => {
+    setMobileOpen(false);
+    setOpenSubmenu(null);
+  };
+
+  const menuItems = [
+    { to: "/", icon: <FaChartBar />, label: "Dashboard" },
+    { to: "/products", icon: <FaBox />, label: "Produits" },
+    { to: "/users", icon: <FaUsers />, label: "Utilisateurs" },
+    {
+      label: "Commandes",
+      icon: <FaClipboardList />,
+      submenu: [
+        { to: "/orders", label: "Commandes" },
+        { to: "/invoices", label: "Bon de Commande" },
+      ]
+    },
+    {
+      label: "Visite",
+      icon: <FaUsers />,
+      submenu: [
+        { to: "/visite", label: "Visite" },
+        { to: "/raisons-visite", label: "Raisons de visite" },
+      ]
+    },
+    {
+      label: "Clients",
+      icon: <FaUsers />,
+      submenu: [
+        { to: "/clients-list", label: "Clients" },
+        { to: "/categories-clients", label: "Catégories Clients" },
+      ]
+    },
+    { to: "/objectifs", icon: <FaBullseye />, label: "Objectifs" },
+    { to: "/promotions", icon: <FaTags />, label: "Promotions" },
+    { to: "/units", icon: <FaTags />, label: "Unités" },
+    { to: "/categories", icon: <FaTags />, label: "Catégories" },
+    { to: "/satisfaction", icon: <FaClipboardCheck />, label: "Satisfaction" },
+    { to: "/map-commercials", icon: <FaMapMarkerAlt />, label: "Carte" },
+  ];
 
   return (
     <nav className="bg-slate-100 border-b border-gray-300 shadow-sm">
-      <div className="max-w-full px-6">
+      <div className="max-w-full px-4 sm:px-6">
         {/* Menu burger pour mobile */}
-        <div className="md:hidden flex items-center justify-between h-14">
-          <span className="font-bold text-lg">Menu</span>
-          <button onClick={() => setMobileOpen((v) => !v)} className="p-2">
-            {mobileOpen ? <FaTimes size={22} /> : <FaBars size={22} />}
+        <div className="lg:hidden flex items-center justify-between h-14">
+          <span className="font-bold text-lg text-gray-800">Menu</span>
+          <button 
+            onClick={() => setMobileOpen((v) => !v)} 
+            className="p-2 rounded-md hover:bg-gray-200 transition-colors"
+          >
+            {mobileOpen ? <FaTimes size={20} /> : <FaBars size={20} />}
           </button>
         </div>
+
+        {/* Menu mobile */}
+        {mobileOpen && (
+          <div className="lg:hidden bg-white border-t border-gray-200 shadow-lg">
+            <div className="px-4 py-2 space-y-1">
+              {menuItems.map((item, index) => (
+                <div key={index}>
+                  {item.to ? (
+                    <NavLink
+                      to={item.to}
+                      onClick={closeMobileMenu}
+                      className={({ isActive }) => 
+                        `flex items-center gap-2 px-3 py-2 rounded-md text-sm transition-colors ${
+                          isActive 
+                            ? "bg-blue-100 text-blue-700 font-semibold" 
+                            : "text-gray-700 hover:bg-blue-50 hover:text-blue-600"
+                        }`
+                      }
+                    >
+                      {item.icon} {item.label}
+                    </NavLink>
+                  ) : (
+                    <div>
+                      <button
+                        onClick={() => toggleSubmenu(item.label)}
+                        className="flex items-center justify-between w-full px-3 py-2 rounded-md text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors"
+                      >
+                        <span className="flex items-center gap-2">
+                          {item.icon} {item.label}
+                        </span>
+                        <FaChevronDown 
+                          className={`transition-transform ${openSubmenu === item.label ? 'rotate-180' : ''}`} 
+                          size={12} 
+                        />
+                      </button>
+                      {openSubmenu === item.label && (
+                        <div className="ml-4 mt-1 space-y-1">
+                          {item.submenu.map((subItem, subIndex) => (
+                            <NavLink
+                              key={subIndex}
+                              to={subItem.to}
+                              onClick={closeMobileMenu}
+                              className={({ isActive }) => 
+                                `flex items-center gap-2 px-3 py-2 rounded-md text-sm transition-colors ${
+                                  isActive 
+                                    ? "bg-blue-100 text-blue-700 font-semibold" 
+                                    : "text-gray-600 hover:bg-blue-50 hover:text-blue-600"
+                                }`
+                              }
+                            >
+                              {subItem.label}
+                            </NavLink>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Navbar desktop */}
-        <ul className="hidden md:flex flex-wrap items-center h-auto text-xs font-medium text-gray-800 gap-x-10  w-full overflow-visible">
-          {/* Groupe 1 */}
+        <ul className="hidden lg:flex flex-wrap items-center h-auto text-xs font-medium text-gray-800 gap-x-6 lg:gap-x-8 w-full overflow-visible">
+          {/* Groupe 1 - Liens simples */}
           <div className="flex flex-row items-center gap-2">
-            <li>
-              <NavLink to="/" className={({ isActive }) => `flex items-center gap-1 px-2 py-1 rounded transition ${isActive ? "bg-blue-100 text-blue-700 font-semibold" : "hover:bg-blue-50 hover:text-blue-600"}` }>
-                <FaChartBar /> Dashboard
-              </NavLink>
-            </li>
-            <li>
-              <NavLink to="/products" className={({ isActive }) => `flex items-center gap-1 px-2 py-1 rounded transition ${isActive ? "bg-blue-100 text-blue-700 font-semibold" : "hover:bg-blue-50 hover:text-blue-600"}` }>
-                <FaBox /> Produits
-              </NavLink>
-            </li>
-            <li>
-              <NavLink to="/users" className={({ isActive }) => `flex items-center gap-1 px-2 py-1 rounded transition ${isActive ? "bg-blue-100 text-blue-700 font-semibold" : "hover:bg-blue-50 hover:text-blue-600"}` }>
-                <FaUsers /> Utilisateurs
-              </NavLink>
-            </li>
+            {menuItems.slice(0, 3).map((item, index) => (
+              <li key={index}>
+                <NavLink 
+                  to={item.to} 
+                  className={({ isActive }) => 
+                    `flex items-center gap-1 px-2 py-1 rounded transition-colors ${
+                      isActive 
+                        ? "bg-blue-100 text-blue-700 font-semibold" 
+                        : "hover:bg-blue-50 hover:text-blue-600"
+                    }`
+                  }
+                >
+                  {item.icon} {item.label}
+                </NavLink>
+              </li>
+            ))}
           </div>
-          {/* Commandes sous-menu */}
-          <div className="flex flex-row items-center gap-2 relative group">
-            <li>
-              <div className="flex items-center gap-1 px-2 py-1 rounded transition hover:bg-blue-50 hover:text-blue-600 cursor-pointer">
-                <FaClipboardList /> Commandes
-              </div>
-              <div className="absolute left-0 top-full mt-2 min-w-[180px] w-max flex flex-col bg-white shadow-lg rounded z-50 opacity-0 group-hover:opacity-100 invisible group-hover:visible transition-all duration-200 py-2">
-                <NavLink to="/orders" className={({ isActive }) => `flex items-center gap-1 px-3 py-1 whitespace-nowrap ${isActive ? "bg-blue-100 text-blue-700 font-semibold" : "hover:bg-blue-50 hover:text-blue-600"}` }>
-                  Commandes
-                </NavLink>
-                <NavLink to="/invoices" className={({ isActive }) => `flex items-center gap-1 px-3 py-1 whitespace-nowrap ${isActive ? "bg-blue-100 text-blue-700 font-semibold" : "hover:bg-blue-50 hover:text-blue-600"}` }>
-                  Bon de Commande
-                </NavLink>
-              </div>
-            </li>
-          </div>
-          {/* Visite sous-menu */}
-          <div className="flex flex-row items-center gap-2 relative group">
-            <li>
-              <div className="flex items-center gap-1 px-2 py-1 rounded transition hover:bg-blue-50 hover:text-blue-600 cursor-pointer">
-                <FaUsers /> Visite
-              </div>
-              <div className="absolute left-0 top-full mt-2 min-w-[180px] flex flex-col bg-white shadow-lg rounded z-50 opacity-0 group-hover:opacity-100 invisible group-hover:visible transition-all duration-200 py-2">
-                <NavLink to="/visite" className={({ isActive }) => `flex items-center gap-1 px-3 py-1 whitespace-nowrap ${isActive ? "bg-blue-100 text-blue-700 font-semibold" : "hover:bg-blue-50 hover:text-blue-600"}` }>
-                  Visite
-                </NavLink>
-                <NavLink to="/raisons-visite" className={({ isActive }) => `flex items-center gap-1 px-3 py-1 whitespace-nowrap ${isActive ? "bg-blue-100 text-blue-700 font-semibold" : "hover:bg-blue-50 hover:text-blue-600"}` }>
-                  Raisons de visite
-                </NavLink>
-              </div>
-            </li>
-          </div>
-          {/* Clients sous-menu */}
-          <div className="flex flex-row items-center gap-2 relative group">
-            <li>
-              <div className="flex items-center gap-1 px-2 py-1 rounded transition hover:bg-blue-50 hover:text-blue-600 cursor-pointer">
-                <FaUsers /> Clients
-              </div>
-              <div className="absolute left-0 top-full mt-2 min-w-[180px] flex flex-col bg-white shadow-lg rounded z-50 opacity-0 group-hover:opacity-100 invisible group-hover:visible transition-all duration-200 py-2">
-                <NavLink to="/clients-list" className={({ isActive }) => `flex items-center gap-1 px-3 py-1 whitespace-nowrap ${isActive ? "bg-blue-100 text-blue-700 font-semibold" : "hover:bg-blue-50 hover:text-blue-600"}` }>
-                  Clients
-                </NavLink>
-                <NavLink to="/categories-clients" className={({ isActive }) => `flex items-center gap-1 px-3 py-1 whitespace-nowrap ${isActive ? "bg-blue-100 text-blue-700 font-semibold" : "hover:bg-blue-50 hover:text-blue-600"}` }>
-                  Catégories Clients
-                </NavLink>
-              </div>
-            </li>
-          </div>
+
+          {/* Sous-menus */}
+          {menuItems.slice(3, 6).map((item, index) => (
+            <div key={index} className="flex flex-row items-center gap-2 relative group">
+              <li>
+                <div className="flex items-center gap-1 px-2 py-1 rounded transition-colors hover:bg-blue-50 hover:text-blue-600 cursor-pointer">
+                  {item.icon} {item.label}
+                </div>
+                <div className="absolute left-0 top-full mt-2 min-w-[180px] w-max flex flex-col bg-white shadow-lg rounded-lg z-50 opacity-0 group-hover:opacity-100 invisible group-hover:visible transition-all duration-200 py-2 border">
+                  {item.submenu.map((subItem, subIndex) => (
+                    <NavLink 
+                      key={subIndex}
+                      to={subItem.to} 
+                      className={({ isActive }) => 
+                        `flex items-center gap-1 px-3 py-2 whitespace-nowrap transition-colors ${
+                          isActive 
+                            ? "bg-blue-100 text-blue-700 font-semibold" 
+                            : "hover:bg-blue-50 hover:text-blue-600"
+                        }`
+                      }
+                    >
+                      {subItem.label}
+                    </NavLink>
+                  ))}
+                </div>
+              </li>
+            </div>
+          ))}
+
           {/* Le reste des liens */}
           <div className="flex flex-row items-center gap-2">
-            <li>
-              <NavLink to="/objectifs" className={({ isActive }) => `flex items-center gap-1 px-2 py-1 rounded transition ${isActive ? "bg-blue-100 text-blue-700 font-semibold" : "hover:bg-blue-50 hover:text-blue-600"}` }>
-                <FaBullseye /> Objectifs
-              </NavLink>
-            </li>
-            <li>
-              <NavLink to="/promotions" className={({ isActive }) => `flex items-center gap-1 px-2 py-1 rounded transition ${isActive ? "bg-blue-100 text-blue-700 font-semibold" : "hover:bg-blue-50 hover:text-blue-600"}` }>
-                <FaTags /> Promotions
-              </NavLink>
-            </li>
-            <li>
-              <NavLink to="/categories" className={({ isActive }) => `flex items-center gap-1 px-2 py-1 rounded transition ${isActive ? "bg-blue-100 text-blue-700 font-semibold" : "hover:bg-blue-50 hover:text-blue-600"}` }>
-                <FaClipboardList /> Catégories
-              </NavLink>
-            </li>
-            <li>
-              <NavLink to="/units" className={({ isActive }) => `flex items-center gap-1 px-2 py-1 rounded transition ${isActive ? "bg-blue-100 text-blue-700 font-semibold" : "hover:bg-blue-50 hover:text-blue-600"}` }>
-                <FaClipboardList /> Unités
-              </NavLink>
-            </li>
-            <li>
-              <NavLink to="/satisfaction" className={({ isActive }) => `flex items-center gap-1 px-2 py-1 rounded transition ${isActive ? "bg-blue-100 text-blue-700 font-semibold" : "hover:bg-blue-50 hover:text-blue-600"}` }>
-                <FaClipboardCheck /> Enquêtes
-              </NavLink>
-            </li>
-            <li>
-              <NavLink to="/map-commercials" className={({ isActive }) => `flex items-center gap-1 px-2 py-1 rounded transition ${isActive ? "bg-blue-100 text-blue-700 font-semibold" : "hover:bg-blue-50 hover:text-blue-600"}` }>
-                <FaMapMarkerAlt /> Carte
-              </NavLink>
-            </li>
+            {menuItems.slice(6).map((item, index) => (
+              <li key={index}>
+                <NavLink 
+                  to={item.to} 
+                  className={({ isActive }) => 
+                    `flex items-center gap-1 px-2 py-1 rounded transition-colors ${
+                      isActive 
+                        ? "bg-blue-100 text-blue-700 font-semibold" 
+                        : "hover:bg-blue-50 hover:text-blue-600"
+                    }`
+                  }
+                >
+                  {item.icon} {item.label}
+                </NavLink>
+              </li>
+            ))}
           </div>
         </ul>
-        {/* Navbar mobile (vertical, accordéon) */}
-        {mobileOpen && (
-          <ul className="flex flex-col md:hidden bg-white shadow-lg rounded-b z-50 p-4 gap-y-2">
-            {/* Dashboard, Produits, Utilisateurs */}
-            <li><NavLink to="/" className={({ isActive }) => `flex items-center gap-2 px-3 py-2 rounded ${isActive ? "bg-blue-100 text-blue-700 font-semibold" : "hover:bg-blue-50 hover:text-blue-600"}` }><FaChartBar /> Dashboard</NavLink></li>
-            <li><NavLink to="/products" className={({ isActive }) => `flex items-center gap-2 px-3 py-2 rounded ${isActive ? "bg-blue-100 text-blue-700 font-semibold" : "hover:bg-blue-50 hover:text-blue-600"}` }><FaBox /> Produits</NavLink></li>
-            <li><NavLink to="/users" className={({ isActive }) => `flex items-center gap-2 px-3 py-2 rounded ${isActive ? "bg-blue-100 text-blue-700 font-semibold" : "hover:bg-blue-50 hover:text-blue-600"}` }><FaUsers /> Utilisateurs</NavLink></li>
-            {/* Accordéon Commandes */}
-            <li>
-              <details className="group">
-                <summary className="flex items-center gap-2 px-3 py-2 rounded cursor-pointer hover:bg-blue-50 hover:text-blue-600"> <FaClipboardList /> Commandes </summary>
-                <div className="flex flex-col ml-4 gap-1 mt-1">
-                  <NavLink to="/orders" className={({ isActive }) => `flex items-center gap-2 px-3 py-2 rounded ${isActive ? "bg-blue-100 text-blue-700 font-semibold" : "hover:bg-blue-50 hover:text-blue-600"}` }>Commandes</NavLink>
-                  <NavLink to="/invoices" className={({ isActive }) => `flex items-center gap-2 px-3 py-2 rounded ${isActive ? "bg-blue-100 text-blue-700 font-semibold" : "hover:bg-blue-50 hover:text-blue-600"}` }>Bon de Commande</NavLink>
-                </div>
-              </details>
-            </li>
-            {/* Accordéon Visite */}
-            <li>
-              <details className="group">
-                <summary className="flex items-center gap-2 px-3 py-2 rounded cursor-pointer hover:bg-blue-50 hover:text-blue-600"> <FaUsers /> Visite </summary>
-                <div className="flex flex-col ml-4 gap-1 mt-1">
-                  <NavLink to="/visite" className={({ isActive }) => `flex items-center gap-2 px-3 py-2 rounded ${isActive ? "bg-blue-100 text-blue-700 font-semibold" : "hover:bg-blue-50 hover:text-blue-600"}` }>Visite</NavLink>
-                  <NavLink to="/raisons-visite" className={({ isActive }) => `flex items-center gap-2 px-3 py-2 rounded ${isActive ? "bg-blue-100 text-blue-700 font-semibold" : "hover:bg-blue-50 hover:text-blue-600"}` }>Raisons de visite</NavLink>
-                </div>
-              </details>
-            </li>
-            {/* Accordéon Clients */}
-            <li>
-              <details className="group">
-                <summary className="flex items-center gap-2 px-3 py-2 rounded cursor-pointer hover:bg-blue-50 hover:text-blue-600"> <FaUsers /> Clients </summary>
-                <div className="flex flex-col ml-4 gap-1 mt-1">
-                  <NavLink to="/clients-list" className={({ isActive }) => `flex items-center gap-2 px-3 py-2 rounded ${isActive ? "bg-blue-100 text-blue-700 font-semibold" : "hover:bg-blue-50 hover:text-blue-600"}` }>Clients</NavLink>
-                  <NavLink to="/categories-clients" className={({ isActive }) => `flex items-center gap-2 px-3 py-2 rounded ${isActive ? "bg-blue-100 text-blue-700 font-semibold" : "hover:bg-blue-50 hover:text-blue-600"}` }>Catégories Clients</NavLink>
-                </div>
-              </details>
-            </li>
-            {/* Le reste des liens */}
-            <li><NavLink to="/objectifs" className={({ isActive }) => `flex items-center gap-2 px-3 py-2 rounded ${isActive ? "bg-blue-100 text-blue-700 font-semibold" : "hover:bg-blue-50 hover:text-blue-600"}` }><FaBullseye /> Objectifs</NavLink></li>
-            <li><NavLink to="/promotions" className={({ isActive }) => `flex items-center gap-2 px-3 py-2 rounded ${isActive ? "bg-blue-100 text-blue-700 font-semibold" : "hover:bg-blue-50 hover:text-blue-600"}` }><FaTags /> Promotions</NavLink></li>
-            <li><NavLink to="/categories" className={({ isActive }) => `flex items-center gap-2 px-3 py-2 rounded ${isActive ? "bg-blue-100 text-blue-700 font-semibold" : "hover:bg-blue-50 hover:text-blue-600"}` }><FaClipboardList /> Catégories</NavLink></li>
-            <li><NavLink to="/units" className={({ isActive }) => `flex items-center gap-2 px-3 py-2 rounded ${isActive ? "bg-blue-100 text-blue-700 font-semibold" : "hover:bg-blue-50 hover:text-blue-600"}` }><FaClipboardList /> Unités</NavLink></li>
-            <li><NavLink to="/satisfaction" className={({ isActive }) => `flex items-center gap-2 px-3 py-2 rounded ${isActive ? "bg-blue-100 text-blue-700 font-semibold" : "hover:bg-blue-50 hover:text-blue-600"}` }><FaClipboardCheck /> Enquêtes</NavLink></li>
-            <li><NavLink to="/map-commercials" className={({ isActive }) => `flex items-center gap-2 px-3 py-2 rounded ${isActive ? "bg-blue-100 text-blue-700 font-semibold" : "hover:bg-blue-50 hover:text-blue-600"}` }><FaMapMarkerAlt /> Carte</NavLink></li>
-          </ul>
-        )}
       </div>
     </nav>
   );

@@ -145,34 +145,76 @@ const Dashboard = () => {
   };
 
   return (
-    <div className="p-6 bg-gray-100 h-screen overflow-auto">
-      <h1 className="text-3xl font-bold text-gray-800 mb-8">Dashboard Force de Vente</h1>
+    <div className="space-responsive">
+      {/* Header */}
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-gray-800 mb-3">Dashboard Force de Vente</h1>
+        <p className="text-gray-600 text-lg">Vue d'ensemble de vos performances commerciales</p>
+      </div>
 
       {/* Cartes Statistiques */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-        <Card icon={<FaShoppingCart className="text-indigo-500 text-3xl" />} title="Commandes" value={stats.totalCommandes} />
-        <Card icon={<FaBoxOpen className="text-green-500 text-3xl" />} title="Produits" value={stats.totalProduits} />
-        <Card icon={<FaUsers className="text-pink-500 text-3xl" />} title="Utilisateurs" value={stats.totalUtilisateurs} />
+        <Card 
+          icon={<FaShoppingCart className="text-indigo-500 text-4xl" />} 
+          title="Commandes" 
+          value={stats.totalCommandes} 
+        />
+        <Card 
+          icon={<FaBoxOpen className="text-green-500 text-4xl" />} 
+          title="Produits" 
+          value={stats.totalProduits} 
+        />
+        <Card 
+          icon={<FaUsers className="text-pink-500 text-4xl" />} 
+          title="Utilisateurs" 
+          value={stats.totalUtilisateurs} 
+        />
       </div>
 
       {/* Graphiques */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-10">
         <ChartCard title="Ventes par Commercial">
-          <div style={{ height: "300px" }}>
-            <Bar data={ventesCommercialData} options={{ maintainAspectRatio: false }} />
+          <div className="h-80">
+            <Bar 
+              data={ventesCommercialData} 
+              options={{ 
+                maintainAspectRatio: false,
+                responsive: true,
+                plugins: {
+                  legend: {
+                    display: false
+                  }
+                }
+              }} 
+            />
           </div>
         </ChartCard>
         <ChartCard title="Produits par Catégorie">
-          <div style={{ height: "300px" }}>
-            <Doughnut data={ventesCategorieData} options={{ maintainAspectRatio: false }} />
+          <div className="h-80">
+            <Doughnut 
+              data={ventesCategorieData} 
+              options={{ 
+                maintainAspectRatio: false,
+                responsive: true,
+                plugins: {
+                  legend: {
+                    position: 'bottom',
+                    labels: {
+                      padding: 20,
+                      usePointStyle: true
+                    }
+                  }
+                }
+              }} 
+            />
           </div>
         </ChartCard>
       </div>
 
-      <div className="mt-10">
+      {/* Graphique des ventes mensuelles */}
+      <div className="mb-6">
         <ChartCard title="Ventes par Mois">
-          <div style={{ height: "350px" }}>
-            {/* Changement pour un graphique à barres */}
+          <div className="h-96">
             <Bar 
               data={ventesMoisData} 
               options={ventesMoisOptions}
@@ -185,19 +227,21 @@ const Dashboard = () => {
 };
 
 const Card = ({ icon, title, value }) => (
-  <div className="bg-white p-6 rounded-lg shadow flex items-center">
-    <div className="mr-4">{icon}</div>
-    <div>
-      <h4 className="text-gray-500">{title}</h4>
-      <p className="text-2xl font-bold">{value}</p>
+  <div className="bg-white p-8 rounded-xl shadow-lg border border-gray-100 flex items-center hover:shadow-xl transition-shadow duration-300">
+    <div className="mr-6 flex-shrink-0">{icon}</div>
+    <div className="min-w-0 flex-1">
+      <h4 className="text-lg text-gray-600 font-medium mb-1">{title}</h4>
+      <p className="text-4xl font-bold text-gray-900">{value}</p>
     </div>
   </div>
 );
 
 const ChartCard = ({ title, children }) => (
-  <div className="bg-white p-6 rounded-lg shadow h-[400px]">
-    <h3 className="text-lg font-bold mb-4 text-gray-700">{title}</h3>
-    {children}
+  <div className="bg-white p-6 rounded-xl shadow-lg border border-gray-100">
+    <h3 className="text-xl font-bold mb-6 text-gray-800 border-b border-gray-200 pb-3">{title}</h3>
+    <div className="relative">
+      {children}
+    </div>
   </div>
 );
 

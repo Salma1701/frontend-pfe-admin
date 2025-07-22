@@ -265,7 +265,8 @@ const handleNext = () => {
                     <th className="px-6 py-3 font-semibold text-left">Commercial</th>
                     <th className="px-6 py-3 font-semibold text-left">Ajouté par</th>
                     <th className="px-6 py-3 font-semibold text-center">Statut</th>
-                    <th className="px-6 py-3 font-semibold text-center w-24">Actions</th>                  </tr>
+                    <th className="px-6 py-3 font-semibold text-center">Actions</th>
+                  </tr>
                 </thead>
                 <tbody>
                   {filteredClients
@@ -295,11 +296,11 @@ const handleNext = () => {
                             {client.isActive ? "Désactiver" : "Activer"}
                           </button>
                         </td>
-                        <td className="px-6 py-4 text-center w-24">
+                        <td className="px-6 py-4 text-center">
                           <button
                             onClick={() => openEditModal(client)}
-                            title="Modifier"
                             className="w-8 h-8 rounded-full border border-blue-400 flex items-center justify-center text-blue-600 hover:bg-blue-100 mx-auto"
+                            title="Modifier"
                           >
                             <LuPencil className="w-4 h-4" />
                           </button>
