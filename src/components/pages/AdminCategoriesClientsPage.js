@@ -29,7 +29,7 @@ const AdminCategoriesClientsPage = () => {
   const addCategory = async () => {
     if (!newCat.trim()) return;
     try {
-      await axios.post("/categorie-client", { nom: newCat, isActive: true });
+      await axios.post("/categorie-client", { nom: newCat });
       toast.success("Catégorie ajoutée !");
       setNewCat("");
       fetchCategories();

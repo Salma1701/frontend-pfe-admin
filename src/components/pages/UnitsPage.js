@@ -70,7 +70,7 @@ const UnitsPage = () => {
     try {
       await axios.post(
         "/unite",
-        { nom: newUnit, isActive: true },
+        { nom: newUnit },
         { headers: { Authorization: `Bearer ${token}` } }
       );
       toast.success("Unité ajoutée !");

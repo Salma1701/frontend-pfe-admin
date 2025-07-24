@@ -88,7 +88,6 @@ const promotionsPerPage = 10;
         tauxReduction: parseFloat(newPromo.tauxReduction),
         dateDebut: new Date(newPromo.dateDebut).toISOString(),
         dateFin: new Date(newPromo.dateFin).toISOString(),
-        isActive: true,
       };
 
       await axios.post(`http://localhost:4000/promotions`, payload, {

@@ -15,7 +15,6 @@ const AdminObjectifsPage = () => {
     montantCible: "",
     prime: "",
     mission: "",
-    isActive: true,
   });
 const [currentPage, setCurrentPage] = useState(1);
 const itemsPerPage = 5; // Nombre d'objectifs par page
