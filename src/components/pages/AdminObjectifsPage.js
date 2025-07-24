@@ -220,75 +220,7 @@ const goToPage = (page) => {
       <hr className="my-8" />
       
       {/* Statistiques des objectifs */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        <div className="bg-white p-4 rounded-lg shadow border">
-          <div className="flex items-center">
-            <div className="p-2 bg-blue-100 rounded-lg">
-              <span className="text-blue-600 text-xl">📊</span>
-            </div>
-            <div className="ml-3">
-              <p className="text-sm text-gray-500">Total Objectifs</p>
-              <p className="text-lg font-semibold">{objectifsCommerciaux.length}</p>
-            </div>
-          </div>
-        </div>
-        
-        <div className="bg-white p-4 rounded-lg shadow border">
-          <div className="flex items-center">
-            <div className="p-2 bg-green-100 rounded-lg">
-              <span className="text-green-600 text-xl">🎯</span>
-            </div>
-            <div className="ml-3">
-              <p className="text-sm text-gray-500">Objectifs Atteints</p>
-              <p className="text-lg font-semibold text-green-600">
-                {objectifsCommerciaux.filter(obj => {
-                  const montantRealise = obj.montantRealise || 0;
-                  const pourcentage = obj.montantCible > 0 ? (montantRealise / obj.montantCible) * 100 : 0;
-                  return obj.isAtteint !== undefined ? obj.isAtteint : pourcentage >= 100;
-                }).length}
-              </p>
-            </div>
-          </div>
-        </div>
-        
-        <div className="bg-white p-4 rounded-lg shadow border">
-          <div className="flex items-center">
-            <div className="p-2 bg-yellow-100 rounded-lg">
-              <span className="text-yellow-600 text-xl">⚡</span>
-            </div>
-            <div className="ml-3">
-              <p className="text-sm text-gray-500">En Progression</p>
-              <p className="text-lg font-semibold text-yellow-600">
-                {objectifsCommerciaux.filter(obj => {
-                  const montantRealise = obj.montantRealise || 0;
-                  const pourcentage = obj.montantCible > 0 ? (montantRealise / obj.montantCible) * 100 : 0;
-                  return pourcentage >= 80 && pourcentage < 100;
-                }).length}
-              </p>
-            </div>
-          </div>
-        </div>
-        
-        <div className="bg-white p-4 rounded-lg shadow border">
-          <div className="flex items-center">
-            <div className="p-2 bg-gray-100 rounded-lg">
-              <span className="text-gray-600 text-xl">📈</span>
-            </div>
-            <div className="ml-3">
-              <p className="text-sm text-gray-500">Taux de Réussite</p>
-              <p className="text-lg font-semibold text-gray-600">
-                {objectifsCommerciaux.length > 0 
-                  ? Math.round((objectifsCommerciaux.filter(obj => {
-                      const montantRealise = obj.montantRealise || 0;
-                      const pourcentage = obj.montantCible > 0 ? (montantRealise / obj.montantCible) * 100 : 0;
-                      return obj.isAtteint !== undefined ? obj.isAtteint : pourcentage >= 100;
-                    }).length / objectifsCommerciaux.length) * 100)
-                  : 0}%
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
+      
       
       <h3 className="text-xl font-semibold mb-4">📋 Liste des Objectifs</h3>
       {/* Filtre objectifs atteints */}
@@ -335,7 +267,7 @@ const goToPage = (page) => {
             if (pourcentage >= 100) {
               return (
                 <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800">
-                  🎯 Atteint
+                   Atteint
                 </span>
               );
             } else if (pourcentage >= 80) {
