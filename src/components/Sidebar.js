@@ -1,7 +1,7 @@
 import {
   FaBoxOpen, FaUsers, FaTruck, FaReceipt,
   FaShoppingCart, FaBalanceScale, FaTags, FaUserFriends,
-  FaChevronRight, FaChevronDown, FaTimes
+  FaChevronRight, FaChevronDown, FaTimes, FaExclamationTriangle
 } from "react-icons/fa";
 import { NavLink, useLocation } from "react-router-dom";
 import { useState, useEffect } from "react";
@@ -11,9 +11,9 @@ const Sidebar = ({ onClose }) => {
   const [openClients, setOpenClients] = useState(false);
   const location = useLocation();
 
-  // Ouvrir automatiquement le sous-menu si l'URL est /raisons-visite
+  // Ouvrir automatiquement le sous-menu si l'URL est /visite ou /raisons-visite
   useEffect(() => {
-    if (location.pathname.startsWith("/raisons-visite")) {
+    if (location.pathname.startsWith("/visite") || location.pathname.startsWith("/raisons-visite")) {
       setOpenVisite(true);
     }
   }, [location.pathname]);
@@ -94,17 +94,22 @@ const Sidebar = ({ onClose }) => {
             {openVisite ? <FaChevronDown /> : <FaChevronRight />}
           </button>
           {openVisite && (
-            <NavLink
-              to="/raisons-visite"
-              onClick={handleNavClick}
-              className={({ isActive }) =>
-                `ml-8 mt-2 text-sm rounded px-2 py-1 transition ${
-                  isActive ? "bg-blue-600 text-white" : "hover:text-white hover:bg-blue-500 text-gray-300"
-                }`
-              }
-            >
-              Raisons de visite
-            </NavLink>
+            <div className="ml-8 flex flex-col gap-1 mt-1">
+              <NavLink 
+                to="/visite" 
+                onClick={handleNavClick}
+                className={({ isActive }) => `flex items-center gap-2 px-2 py-1 rounded transition-all duration-200 text-sm ${isActive ? "bg-blue-600 text-white" : "hover:bg-blue-500 hover:text-white text-gray-300"}` }
+              >
+                Visite
+              </NavLink>
+              <NavLink 
+                to="/raisons-visite" 
+                onClick={handleNavClick}
+                className={({ isActive }) => `flex items-center gap-2 px-2 py-1 rounded transition-all duration-200 text-sm ${isActive ? "bg-blue-600 text-white" : "hover:bg-blue-500 hover:text-white text-gray-300"}` }
+              >
+                Raisons de visite
+              </NavLink>
+            </div>
           )}
         </div>
         
@@ -179,6 +184,14 @@ const Sidebar = ({ onClose }) => {
           className={({ isActive }) => `flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-200 text-sm lg:text-base ${isActive ? "bg-blue-600 text-white" : "hover:bg-blue-500 hover:text-white"}` }
         >
           <FaReceipt /> Enquêtes Satisfaction
+        </NavLink>
+        
+        <NavLink 
+          to="/reclamations" 
+          onClick={handleNavClick}
+          className={({ isActive }) => `flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-200 text-sm lg:text-base ${isActive ? "bg-blue-600 text-white" : "hover:bg-blue-500 hover:text-white"}` }
+        >
+          <FaExclamationTriangle /> Réclamations
         </NavLink>
         
         <NavLink 

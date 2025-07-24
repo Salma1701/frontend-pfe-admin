@@ -67,48 +67,128 @@ const AddProductForm = ({ onClose }) => {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="w-full max-w-2xl mx-auto flex flex-col gap-4 p-4 bg-white rounded shadow-md overflow-y-auto">
-      <label className="font-semibold">Designation</label>
-      <input type="text" value={designation} onChange={(e) => setDesignation(e.target.value)} className="border rounded px-3 py-2" required />
+    <div className="space-y-4">
+      <form id="add-product-form" onSubmit={handleSubmit} className="space-y-3">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          {/* Titre */}
+          <div className="md:col-span-2">
+            <label className="block text-sm font-semibold text-gray-700 mb-1">Désignation *</label>
+            <input
+              type="text"
+              value={designation}
+              onChange={(e) => setDesignation(e.target.value)}
+              className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent hover:border-indigo-400"
+              required
+            />
+          </div>
 
-      <label className="font-semibold">Description</label>
-      <textarea value={description} onChange={(e) => setDescription(e.target.value)} className="border rounded px-3 py-2" required />
+          {/* Description */}
+          <div className="md:col-span-2">
+            <label className="block text-sm font-semibold text-gray-700 mb-1">Description *</label>
+            <textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent hover:border-indigo-400"
+              rows="2"
+              required
+            />
+          </div>
 
-      <label className="font-semibold">Prix unitaire HT</label>
-      <input type="number" value={prixUnitaire} onChange={(e) => setPrixUnitaire(e.target.value)} className="border rounded px-3 py-2" min="0" required />
+          {/* Prix unitaire HT */}
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-1">Prix HT *</label>
+            <input
+              type="number"
+              value={prixUnitaire}
+              onChange={(e) => setPrixUnitaire(e.target.value)}
+              className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent hover:border-indigo-400"
+              min="0"
+              required
+            />
+          </div>
 
-      <label className="font-semibold">TVA (%)</label>
-      <input type="number" step="0.01" value={tva} onChange={(e) => setTva(e.target.value)} className="border rounded px-3 py-2" required />
+          {/* TVA */}
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-1">TVA (%) *</label>
+            <input
+              type="number"
+              step="0.01"
+              value={tva}
+              onChange={(e) => setTva(e.target.value)}
+              className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent hover:border-indigo-400"
+              required
+            />
+          </div>
 
-      <label className="font-semibold">Prix unitaire TTC</label>
-      <input type="number" value={prixTTC} disabled className="bg-gray-100 border rounded px-3 py-2" />
+          {/* Prix TTC */}
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-1">Prix TTC</label>
+            <input
+              type="number"
+              value={prixTTC}
+              disabled
+              className="w-full px-3 py-2 bg-gray-100 border-2 border-gray-300 rounded-lg"
+            />
+          </div>
 
-      <label className="font-semibold">Colisage</label>
-      <input type="number" value={colisage} onChange={(e) => setColisage(e.target.value)} className="border rounded px-3 py-2" min="1" required />
+          {/* Colisage */}
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-1">Colisage *</label>
+            <input
+              type="number"
+              value={colisage}
+              onChange={(e) => setColisage(e.target.value)}
+              className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent hover:border-indigo-400"
+              min="1"
+              required
+            />
+          </div>
 
-      <label className="font-semibold">Catégorie</label>
-      <select value={categorieId} onChange={(e) => setCategorieId(e.target.value)} className="border rounded px-3 py-2" required>
-        <option value="">Choisir une catégorie</option>
-        {categories.filter(cat => cat.isActive).map((cat) => (
-          <option key={cat.id} value={cat.nom}>{cat.nom}</option>
-        ))}
-      </select>
+          {/* Catégorie */}
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-1">Catégorie *</label>
+            <select
+              value={categorieId}
+              onChange={(e) => setCategorieId(e.target.value)}
+              className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent hover:border-indigo-400 appearance-none bg-white"
+              required
+            >
+              <option value="">Choisir une catégorie</option>
+              {categories.filter(cat => cat.isActive).map((cat) => (
+                <option key={cat.id} value={cat.nom}>{cat.nom}</option>
+              ))}
+            </select>
+          </div>
 
-      <label className="font-semibold">Unité</label>
-      <select value={uniteNom} onChange={(e) => setUniteNom(e.target.value)} className="border rounded px-3 py-2" required>
-        <option value="">Choisir une unité</option>
-        {unites.filter(unit => unit.isActive).map((unit) => (
-          <option key={unit.id} value={unit.nom}>{unit.nom}</option>
-        ))}
-      </select>
+          {/* Unité */}
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-1">Unité *</label>
+            <select
+              value={uniteNom}
+              onChange={(e) => setUniteNom(e.target.value)}
+              className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent hover:border-indigo-400 appearance-none bg-white"
+              required
+            >
+              <option value="">Choisir une unité</option>
+              {unites.filter(unit => unit.isActive).map((unit) => (
+                <option key={unit.id} value={unit.nom}>{unit.nom}</option>
+              ))}
+            </select>
+          </div>
 
-      <label className="font-semibold">Images</label>
-      <input type="file" multiple onChange={(e) => setImages([...e.target.files])} className="border rounded px-3 py-2" />
-
-      <button type="submit" className="bg-blue-600 text-white py-2 rounded hover:bg-blue-700">
-        Créer
-      </button>
-    </form>
+          {/* Images */}
+          <div className="md:col-span-2">
+            <label className="block text-sm font-semibold text-gray-700 mb-1">Images</label>
+            <input
+              type="file"
+              multiple
+              onChange={(e) => setImages([...e.target.files])}
+              className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent hover:border-indigo-400"
+            />
+          </div>
+        </div>
+      </form>
+    </div>
   );
 };
 

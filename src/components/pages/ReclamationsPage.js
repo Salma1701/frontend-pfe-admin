@@ -63,6 +63,15 @@ const ReclamationsPage = () => {
                 Client : <strong>{rec.client.nom}</strong> – Par :{" "}
                 <strong>{rec.user.nom}</strong>
               </p>
+              <p className="text-sm text-gray-400">
+                Date : <strong>{new Date(rec.date).toLocaleDateString('fr-FR', {
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric',
+                  hour: '2-digit',
+                  minute: '2-digit'
+                })}</strong>
+              </p>
               <div className="mt-3 flex items-center gap-2">
                 <span
                   className={`px-2 py-1 text-xs rounded-full ${

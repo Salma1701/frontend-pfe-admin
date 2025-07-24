@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
-import { FaBalanceScale, FaPlus } from "react-icons/fa";
-import { toast, ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
-import { LuPencil } from "react-icons/lu";
+import axios from "../../api/axios";
+import { toast } from "react-toastify";
+import { LuPencil, LuPlus } from "react-icons/lu";
+import Modal from "../Modal";
+import { SecondaryButton, PrimaryButton } from "../ModalButton";
 
 const UNITS_PER_PAGE = 10;
 
@@ -38,7 +38,7 @@ const UnitsPage = () => {
     setLoading(true);
     try {
       const res = await axios.get(
-        `http://localhost:4000/unite?search=${encodeURIComponent(searchValue)}&page=${page}&limit=${UNITS_PER_PAGE}`,
+        `/unite?search=${encodeURIComponent(searchValue)}&page=${page}&limit=${UNITS_PER_PAGE}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setUnits(res.data.data);
@@ -69,8 +69,8 @@ const UnitsPage = () => {
     setIsAdding(true);
     try {
       await axios.post(
-        "http://localhost:4000/unite",
-        { nom: newUnit },
+        "/unite",
+        { nom: newUnit, isActive: true },
         { headers: { Authorization: `Bearer ${token}` } }
       );
       toast.success("Unité ajoutée !");
@@ -96,7 +96,7 @@ const UnitsPage = () => {
     setIsEditing(true);
     try {
       await axios.put(
-        `http://localhost:4000/unite/${editUnit.id}`,
+        `/unite/${editUnit.id}`,
         { nom: editUnitName },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -113,7 +113,7 @@ const UnitsPage = () => {
   const toggleUnitStatus = async (id, currentStatus) => {
     try {
       await axios.put(
-        `http://localhost:4000/unite/${id}/status`,
+        `/unite/${id}/status`,
         { isActive: !currentStatus },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -125,14 +125,21 @@ const UnitsPage = () => {
 
   return (
     <div className="p-8 bg-gradient-to-br from-gray-50 to-blue-50 min-h-screen font-[Inter]">
-      <ToastContainer position="top-right" autoClose={3000} />
-
       {/* ✅ Barre d'action */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6 gap-3">
         <h2 className="text-3xl font-extrabold text-indigo-700 flex items-center gap-3">
-          <FaBalanceScale className="text-indigo-500" /> Gestion des Unités
+          <svg className="w-6 h-6 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+          </svg>
+          Gestion des Unités
         </h2>
         <div className="flex items-center gap-3">
+            <button
+            onClick={() => setShowAddRow(!showAddRow)}
+            className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded flex items-center gap-2"
+          >
+            {showAddRow ? "Annuler" : "Ajouter"}
+          </button>
           <input
             type="text"
             placeholder="Rechercher..."
@@ -140,12 +147,7 @@ const UnitsPage = () => {
             onChange={(e) => setSearch(e.target.value)}
             className="border border-gray-300 rounded px-4 py-2 w-full max-w-xs"
           />
-          <button
-            onClick={() => setShowAddRow(!showAddRow)}
-            className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded flex items-center gap-2"
-          >
-            {showAddRow ? "Annuler" : "Ajouter"}
-          </button>
+        
         </div>
       </div>
 
@@ -211,11 +213,11 @@ const UnitsPage = () => {
                       onClick={() => toggleUnitStatus(unit.id, unit.isActive)}
                       className={`px-3 py-1 text-sm font-semibold rounded-full ${
                         unit.isActive
-                          ? "bg-green-100 text-green-700 border border-green-400 hover:bg-green-200"
+                          ? "bg-green-100 text-green-700 border border-green-400 hover:bg-green-200" 
                           : "bg-red-100 text-red-700 border border-red-400 hover:bg-red-200"
                       }`}
                     >
-                      {unit.isActive ? "Désactiver" : "Activer"}
+                      {unit.isActive ? "Active" : "Inactive"}
                     </button>
                   </td>
                   <td className="px-6 py-4 text-center">
@@ -263,46 +265,82 @@ const UnitsPage = () => {
       )}
 
       {/* ✅ Modal ajout */}
-      {showAddModal && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
-          <form onSubmit={addUnit} className="bg-white p-6 rounded-lg shadow-lg w-[90%] max-w-md">
-            <h3 className="text-xl font-semibold text-gray-800 mb-4">Ajouter une Unité</h3>
+      <Modal
+        isOpen={showAddModal}
+        onClose={() => setShowAddModal(false)}
+        title="Ajouter une Unité"
+        subtitle="Créez une nouvelle unité de mesure"
+        icon={LuPlus}
+        maxWidth="max-w-md"
+        footer={
+          <>
+            <SecondaryButton onClick={() => setShowAddModal(false)} disabled={isAdding}>
+              Annuler
+            </SecondaryButton>
+            <PrimaryButton onClick={addUnit} disabled={isAdding}>
+              {isAdding ? "Ajout..." : "Ajouter"}
+            </PrimaryButton>
+          </>
+        }
+      >
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+              <svg className="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+              </svg>
+              Nom de l'unité *
+            </label>
             <input
               type="text"
               placeholder="Nom de la nouvelle unité"
               value={newUnit}
               onChange={(e) => setNewUnit(e.target.value)}
-              className="w-full border rounded px-4 py-2 mb-4"
+              className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent hover:border-indigo-400"
               autoFocus
             />
-            <div className="flex justify-end gap-3">
-              <button type="button" className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400" onClick={() => setShowAddModal(false)} disabled={isAdding}>Annuler</button>
-              <button type="submit" className="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700" disabled={isAdding}>{isAdding ? "Ajout..." : "Ajouter"}</button>
-            </div>
-          </form>
+          </div>
         </div>
-      )}
+      </Modal>
 
       {/* ✅ Modal modification */}
-      {showEditModal && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
-          <form onSubmit={handleEditUnit} className="bg-white p-6 rounded-lg shadow-lg w-[90%] max-w-md">
-            <h3 className="text-xl font-semibold text-gray-800 mb-4">Modifier l'Unité</h3>
+      <Modal
+        isOpen={showEditModal}
+        onClose={() => setShowEditModal(false)}
+        title="Modifier l'Unité"
+        subtitle="Mettez à jour le nom de l'unité"
+        icon={LuPencil}
+        maxWidth="max-w-md"
+        footer={
+          <>
+            <SecondaryButton onClick={() => setShowEditModal(false)} disabled={isEditing}>
+              Annuler
+            </SecondaryButton>
+            <PrimaryButton onClick={handleEditUnit} disabled={isEditing}>
+              {isEditing ? "Modification..." : "Enregistrer"}
+            </PrimaryButton>
+          </>
+        }
+      >
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+              <svg className="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+              </svg>
+              Nom de l'unité *
+            </label>
             <input
               type="text"
               placeholder="Nom de l'unité"
               value={editUnitName}
               onChange={(e) => setEditUnitName(e.target.value)}
-              className="w-full border rounded px-4 py-2 mb-4"
+              className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent hover:border-indigo-400"
               autoFocus
             />
-            <div className="flex justify-end gap-3">
-              <button type="button" className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400" onClick={() => setShowEditModal(false)} disabled={isEditing}>Annuler</button>
-              <button type="submit" className="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700" disabled={isEditing}>{isEditing ? "Modification..." : "Enregistrer"}</button>
-            </div>
-          </form>
+          </div>
         </div>
-      )}
+      </Modal>
     </div>
   );
 };

@@ -70,13 +70,41 @@ const Dashboard = () => {
     ],
   };
 
+  // Palette de couleurs pour les catégories
+  const categoryColors = [
+    "#3B82F6", // Bleu
+    "#10B981", // Vert
+    "#F59E0B", // Orange
+    "#EF4444", // Rouge
+    "#8B5CF6", // Violet
+    "#06B6D4", // Cyan
+    "#F97316", // Orange foncé
+    "#84CC16", // Vert lime
+    "#EC4899", // Rose
+    "#6366F1", // Indigo
+    "#14B8A6", // Teal
+    "#F43F5E", // Rose foncé
+  ];
+
   const ventesCategorieData = {
     labels: ventesCategorie.map((v) => v.categorie),
     datasets: [
       {
         label: "Produits par Catégorie",
         data: ventesCategorie.map((v) => v.quantite),
-        backgroundColor: ["#34D399", "#60A5FA", "#FBBF24", "#F472B6"],
+        backgroundColor: ventesCategorie.map((_, index) => 
+          categoryColors[index % categoryColors.length]
+        ),
+        borderColor: ventesCategorie.map((_, index) => 
+          categoryColors[index % categoryColors.length]
+        ),
+        borderWidth: 2,
+        hoverBackgroundColor: ventesCategorie.map((_, index) => 
+          categoryColors[index % categoryColors.length]
+        ),
+        hoverBorderColor: ventesCategorie.map((_, index) => 
+          categoryColors[index % categoryColors.length]
+        ),
       },
     ],
   };
@@ -201,7 +229,43 @@ const Dashboard = () => {
                     position: 'bottom',
                     labels: {
                       padding: 20,
-                      usePointStyle: true
+                      usePointStyle: true,
+                      font: {
+                        size: 12,
+                        weight: 'bold'
+                      },
+                      generateLabels: function(chart) {
+                        const data = chart.data;
+                        if (data.labels.length && data.datasets.length) {
+                          return data.labels.map((label, i) => {
+                            const dataset = data.datasets[0];
+                            const value = dataset.data[i];
+                            const backgroundColor = dataset.backgroundColor[i];
+                            
+                            return {
+                              text: `${label}: ${value}`,
+                              fillStyle: backgroundColor,
+                              strokeStyle: backgroundColor,
+                              lineWidth: 0,
+                              pointStyle: 'circle',
+                              hidden: false,
+                              index: i
+                            };
+                          });
+                        }
+                        return [];
+                      }
+                    }
+                  },
+                  tooltip: {
+                    callbacks: {
+                      label: function(context) {
+                        const label = context.label || '';
+                        const value = context.parsed;
+                        const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                        const percentage = ((value / total) * 100).toFixed(1);
+                        return `${label}: ${value} (${percentage}%)`;
+                      }
                     }
                   }
                 }

@@ -10,20 +10,28 @@ const AdminObjectifsPage = () => {
   const [objectifs, setObjectifs] = useState([]);
   const [form, setForm] = useState({
     commercialId: "",
-    dateDebut: new Date().toISOString().slice(0, 10),
+    dateDebut: new Date().toISOString().slice(0, 10), 
     dateFin: new Date().toISOString().slice(0, 10),
     montantCible: "",
     prime: "",
     mission: "",
+    isActive: true,
   });
 const [currentPage, setCurrentPage] = useState(1);
 const itemsPerPage = 5; // Nombre d'objectifs par page
 const [filtreAtteint, setFiltreAtteint] = useState(false);
 // N'afficher que les objectifs commerciaux (pas globaux)
 const objectifsCommerciaux = objectifs.filter((obj) => obj.commercial);
-const objectifsFiltres = objectifsCommerciaux.filter((obj) =>
-  filtreAtteint ? (obj.isAtteint !== undefined ? obj.isAtteint : (obj.montantRealise !== undefined ? obj.montantRealise >= obj.montantCible : false)) : true
-);
+const objectifsFiltres = objectifsCommerciaux.filter((obj) => {
+  if (!filtreAtteint) return true;
+  
+  // Vérifier si l'objectif est atteint
+  const montantRealise = obj.montantRealise || 0;
+  const pourcentage = obj.montantCible > 0 ? (montantRealise / obj.montantCible) * 100 : 0;
+  const isAtteint = obj.isAtteint !== undefined ? obj.isAtteint : pourcentage >= 100;
+  
+  return isAtteint;
+});
 const getPaginatedObjectifs = () => {
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
@@ -55,9 +63,26 @@ const goToPage = (page) => {
 
   const fetchObjectifs = async () => {
     try {
+      console.log('🔍 fetchObjectifs appelé');
       const res = await axios.get(`${API_BASE}/objectifs`, headers);
+      console.log('📊 Réponse du backend:', res.data);
+      
+      // Log détaillé de chaque objectif
+      res.data.forEach((obj, index) => {
+        console.log(`📋 Objectif ${index + 1}:`, {
+          id: obj.id,
+          commercial: obj.commercial ? `${obj.commercial.nom} ${obj.commercial.prenom}` : 'Global',
+          mission: obj.mission,
+          montantCible: obj.montantCible,
+          montantRealise: obj.montantRealise,
+          isAtteint: obj.isAtteint,
+          atteint: obj.atteint
+        });
+      });
+      
       setObjectifs(res.data);
     } catch (err) {
+      console.error('❌ Erreur fetchObjectifs:', err);
       alert("Erreur chargement objectifs : " + err.response?.data?.message);
     }
   };
@@ -194,6 +219,78 @@ const goToPage = (page) => {
       </form>
 
       <hr className="my-8" />
+      
+      {/* Statistiques des objectifs */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+        <div className="bg-white p-4 rounded-lg shadow border">
+          <div className="flex items-center">
+            <div className="p-2 bg-blue-100 rounded-lg">
+              <span className="text-blue-600 text-xl">📊</span>
+            </div>
+            <div className="ml-3">
+              <p className="text-sm text-gray-500">Total Objectifs</p>
+              <p className="text-lg font-semibold">{objectifsCommerciaux.length}</p>
+            </div>
+          </div>
+        </div>
+        
+        <div className="bg-white p-4 rounded-lg shadow border">
+          <div className="flex items-center">
+            <div className="p-2 bg-green-100 rounded-lg">
+              <span className="text-green-600 text-xl">🎯</span>
+            </div>
+            <div className="ml-3">
+              <p className="text-sm text-gray-500">Objectifs Atteints</p>
+              <p className="text-lg font-semibold text-green-600">
+                {objectifsCommerciaux.filter(obj => {
+                  const montantRealise = obj.montantRealise || 0;
+                  const pourcentage = obj.montantCible > 0 ? (montantRealise / obj.montantCible) * 100 : 0;
+                  return obj.isAtteint !== undefined ? obj.isAtteint : pourcentage >= 100;
+                }).length}
+              </p>
+            </div>
+          </div>
+        </div>
+        
+        <div className="bg-white p-4 rounded-lg shadow border">
+          <div className="flex items-center">
+            <div className="p-2 bg-yellow-100 rounded-lg">
+              <span className="text-yellow-600 text-xl">⚡</span>
+            </div>
+            <div className="ml-3">
+              <p className="text-sm text-gray-500">En Progression</p>
+              <p className="text-lg font-semibold text-yellow-600">
+                {objectifsCommerciaux.filter(obj => {
+                  const montantRealise = obj.montantRealise || 0;
+                  const pourcentage = obj.montantCible > 0 ? (montantRealise / obj.montantCible) * 100 : 0;
+                  return pourcentage >= 80 && pourcentage < 100;
+                }).length}
+              </p>
+            </div>
+          </div>
+        </div>
+        
+        <div className="bg-white p-4 rounded-lg shadow border">
+          <div className="flex items-center">
+            <div className="p-2 bg-gray-100 rounded-lg">
+              <span className="text-gray-600 text-xl">📈</span>
+            </div>
+            <div className="ml-3">
+              <p className="text-sm text-gray-500">Taux de Réussite</p>
+              <p className="text-lg font-semibold text-gray-600">
+                {objectifsCommerciaux.length > 0 
+                  ? Math.round((objectifsCommerciaux.filter(obj => {
+                      const montantRealise = obj.montantRealise || 0;
+                      const pourcentage = obj.montantCible > 0 ? (montantRealise / obj.montantCible) * 100 : 0;
+                      return obj.isAtteint !== undefined ? obj.isAtteint : pourcentage >= 100;
+                    }).length / objectifsCommerciaux.length) * 100)
+                  : 0}%
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+      
       <h3 className="text-xl font-semibold mb-4">📋 Liste des Objectifs</h3>
       {/* Filtre objectifs atteints */}
       <div className="mb-4 flex items-center gap-6">
@@ -213,6 +310,8 @@ const goToPage = (page) => {
           <tr className="bg-indigo-100 text-indigo-800">
             <th className="border p-2">Commercial</th>
             <th className="border p-2">Cible (€)</th>
+            <th className="border p-2">Réalisé (€)</th>
+            <th className="border p-2">Progression</th>
             <th className="border p-2">Prime (€)</th>
             <th className="border p-2">Période</th>
             <th className="border p-2">Mission</th>
@@ -226,23 +325,97 @@ const goToPage = (page) => {
   <tr key={obj.id} className="text-center">
     <td className="border p-2">
       {obj.commercial ? (
-        <span className="text-gray-800">
-          {obj.commercial.nom} {obj.commercial.prenom}
-        </span>
+        <div className="flex items-center space-x-2">
+          <span className="text-gray-800">
+            {obj.commercial.nom} {obj.commercial.prenom}
+          </span>
+          {(() => {
+            const montantRealise = obj.montantRealise || 0;
+            const pourcentage = obj.montantCible > 0 ? (montantRealise / obj.montantCible) * 100 : 0;
+            
+            if (pourcentage >= 100) {
+              return (
+                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800">
+                  🎯 Atteint
+                </span>
+              );
+            } else if (pourcentage >= 80) {
+              return (
+                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-800">
+                  ⚡ Proche
+                </span>
+              );
+            }
+            return null;
+          })()}
+        </div>
       ) : (
         <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-sm font-semibold">
           Objectif Global
         </span>
       )}
     </td>
-    <td className="border p-2">{obj.montantCible}</td>
-    <td className="border p-2">{obj.prime}</td>
+    <td className="border p-2">{obj.montantCible.toLocaleString()} €</td>
+    <td className="border p-2">
+      {obj.montantRealise !== undefined ? `${obj.montantRealise.toLocaleString()} €` : '0 €'}
+    </td>
+    <td className="border p-2">
+      {(() => {
+        const montantRealise = obj.montantRealise || 0;
+        const pourcentage = obj.montantCible > 0 ? (montantRealise / obj.montantCible) * 100 : 0;
+        const isAtteint = pourcentage >= 100;
+        return (
+          <div className="flex items-center space-x-2">
+            <div className="flex-1 bg-gray-200 rounded-full h-2">
+              <div 
+                className={`h-2 rounded-full transition-all duration-300 ${
+                  isAtteint ? 'bg-green-500' : 'bg-blue-500'
+                }`}
+                style={{ width: `${Math.min(pourcentage, 100)}%` }}
+              ></div>
+            </div>
+            <span className={`text-xs font-semibold ${
+              isAtteint ? 'text-green-600' : 'text-blue-600'
+            }`}>
+              {pourcentage.toFixed(0)}%
+            </span>
+          </div>
+        );
+      })()}
+    </td>
+    <td className="border p-2">{obj.prime.toLocaleString()} €</td>
     <td className="border p-2">
       {new Date(obj.dateDebut).toLocaleDateString()} -{" "}
       {new Date(obj.dateFin).toLocaleDateString()}
     </td>
     <td className="border p-2">{obj.mission || '-'}</td>
-    <td className="border p-2">{(obj.isAtteint !== undefined ? obj.isAtteint : (obj.montantRealise !== undefined ? obj.montantRealise >= obj.montantCible : false)) ? 'Oui' : 'Non'}</td>
+    <td className="border p-2 text-center">
+      {(() => {
+        const montantRealise = obj.montantRealise || 0;
+        const pourcentage = obj.montantCible > 0 ? (montantRealise / obj.montantCible) * 100 : 0;
+        const isAtteint = obj.isAtteint !== undefined ? obj.isAtteint : pourcentage >= 100;
+        
+        return (
+          <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold ${
+            isAtteint 
+              ? 'bg-green-100 text-green-800 border border-green-300' 
+              : 'bg-gray-100 text-gray-800 border border-gray-300'
+          }`}>
+            {isAtteint ? (
+              <>
+                <span className="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
+                Oui
+              </>
+            ) : (
+              <>
+                <span className="w-2 h-2 bg-gray-400 rounded-full mr-2"></span>
+                Non
+              </>
+            )}
+          </span>
+        );
+      })()}
+    </td>
             <td className="border p-2 text-center">
           <button
             onClick={() => handleToggleStatus(obj.id)}
@@ -252,7 +425,7 @@ const goToPage = (page) => {
                 : "bg-red-100 text-red-700 border border-red-400 hover:bg-red-200"
             }`}
           >
-            {obj.isActive ? "Désactiver" : "Activer"}
+            {obj.isActive ? "Active" : "Inactive"}
           </button>
         </td>
     <td className="border p-2 flex justify-center gap-2">
@@ -335,51 +508,68 @@ const goToPage = (page) => {
       }}
       className="grid grid-cols-1 md:grid-cols-2 gap-4"
     >
-      <input
-        name="montantCible"
-        type="number"
-        value={editForm.montantCible}
-        onChange={(e) =>
-          setEditForm({ ...editForm, montantCible: e.target.value })
-        }
-        className="border p-2 rounded w-full"
-      />
-      <input
-        name="prime"
-        type="number"
-        value={editForm.prime}
-        onChange={(e) =>
-          setEditForm({ ...editForm, prime: e.target.value })
-        }
-        className="border p-2 rounded w-full"
-      />
-      <input
-        name="dateDebut"
-        type="date"
-        value={editForm.dateDebut.split('T')[0]}
-        onChange={(e) =>
-          setEditForm({ ...editForm, dateDebut: e.target.value })
-        }
-        className="border p-2 rounded w-full"
-      />
-      <input
-        name="dateFin"
-        type="date"
-        value={editForm.dateFin.split('T')[0]}
-        onChange={(e) =>
-          setEditForm({ ...editForm, dateFin: e.target.value })
-        }
-        className="border p-2 rounded w-full"
-      />
-      <input
-        name="mission"
-        type="text"
-        value={editForm.mission}
-        onChange={(e) =>
-          setEditForm({ ...editForm, mission: e.target.value })
-        }
-        className="border p-2 rounded w-full md:col-span-2"
-      />
+      <div>
+        <label className="block text-sm font-medium mb-1">Montant Cible (€):</label>
+        <input
+          name="montantCible"
+          type="number"
+          value={editForm.montantCible}
+          onChange={(e) =>
+            setEditForm({ ...editForm, montantCible: e.target.value })
+          }
+          className="border p-2 rounded w-full"
+          required
+        />
+      </div>
+      <div>
+        <label className="block text-sm font-medium mb-1">Prime (€):</label>
+        <input
+          name="prime"
+          type="number"
+          value={editForm.prime}
+          onChange={(e) =>
+            setEditForm({ ...editForm, prime: e.target.value })
+          }
+          className="border p-2 rounded w-full"
+          required
+        />
+      </div>
+      <div>
+        <label className="block text-sm font-medium mb-1">Date début :</label>
+        <input
+          name="dateDebut"
+          type="date"
+          value={editForm.dateDebut.split('T')[0]}
+          onChange={(e) =>
+            setEditForm({ ...editForm, dateDebut: e.target.value })
+          }
+          className="border p-2 rounded w-full"
+        />
+      </div>
+      <div>
+        <label className="block text-sm font-medium mb-1">Date fin :</label>
+        <input
+          name="dateFin"
+          type="date"
+          value={editForm.dateFin.split('T')[0]}
+          onChange={(e) =>
+            setEditForm({ ...editForm, dateFin: e.target.value })
+          }
+          className="border p-2 rounded w-full"
+        />
+      </div>
+      <div className="md:col-span-2">
+        <label className="block text-sm font-medium mb-1">Mission (optionnel):</label>
+        <input
+          name="mission"
+          type="text"
+          value={editForm.mission}
+          onChange={(e) =>
+            setEditForm({ ...editForm, mission: e.target.value })
+          }
+          className="border p-2 rounded w-full"
+        />
+      </div>
       <div className="md:col-span-2 flex justify-end gap-2 mt-4">
         <button
           type="button"

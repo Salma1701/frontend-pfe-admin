@@ -2,7 +2,8 @@ import React, { useEffect, useState } from "react";
 import axios from "../../api/axios";
 import { toast } from "react-toastify";
 import { LuPencil } from "react-icons/lu";
-import { Dialog } from "@headlessui/react";
+import Modal from "../Modal";
+import { SecondaryButton, PrimaryButton } from "../ModalButton";
 
 const AdminCategoriesClientsPage = () => {
   const [categories, setCategories] = useState([]);
@@ -28,7 +29,7 @@ const AdminCategoriesClientsPage = () => {
   const addCategory = async () => {
     if (!newCat.trim()) return;
     try {
-      await axios.post("/categorie-client", { nom: newCat });
+      await axios.post("/categorie-client", { nom: newCat, isActive: true });
       toast.success("Catégorie ajoutée !");
       setNewCat("");
       fetchCategories();
@@ -133,11 +134,11 @@ const AdminCategoriesClientsPage = () => {
                       className={`px-3 py-1 text-sm font-semibold rounded-full ${
                         cat.isActive
                           ? 'bg-green-100 text-green-700 border border-green-400 hover:bg-green-200'
-                          : 'bg-red-100 text-red-700 border border-red-400 hover:bg-red-200'
+                          : 'bg-red-100 text-red-700 border border-red-400 hover:bg-red-200' 
                       }`}
                       onClick={() => toggleStatus(cat.id, cat.isActive)}
                     >
-                      {cat.isActive ? 'Désactiver' : 'Activer'}
+                      {cat.isActive ? 'Active' : 'Inactive'}
                     </button>
                   </td>
                   <td className="px-6 py-4 text-center">
@@ -156,33 +157,41 @@ const AdminCategoriesClientsPage = () => {
         </table>
       </div>
 
-      <Dialog open={editModalOpen} onClose={() => setEditModalOpen(false)} className="relative z-50">
-        <div className="fixed inset-0 bg-black/30" aria-hidden="true" />
-        <div className="fixed inset-0 flex items-center justify-center p-4">
-          <div className="bg-white p-6 rounded-lg shadow-lg w-[90%] max-w-sm">
-            <Dialog.Title className="text-lg font-bold">Modifier Catégorie</Dialog.Title>
+      <Modal
+        isOpen={editModalOpen}
+        onClose={() => setEditModalOpen(false)}
+        title="Modifier Catégorie"
+        subtitle="Mettez à jour le nom de la catégorie"
+        icon={LuPencil}
+        maxWidth="max-w-sm"
+        footer={
+          <>
+            <SecondaryButton onClick={() => setEditModalOpen(false)}>
+              Annuler
+            </SecondaryButton>
+            <PrimaryButton onClick={submitEdit}>
+              Enregistrer
+            </PrimaryButton>
+          </>
+        }
+      >
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+              <svg className="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+              </svg>
+              Nom de la catégorie *
+            </label>
             <input
               value={editCatName}
               onChange={e => setEditCatName(e.target.value)}
-              className="w-full border rounded px-3 py-2 mt-4 mb-4"
+              className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent hover:border-indigo-400"
+              placeholder="Entrez le nom de la catégorie"
             />
-            <div className="flex justify-end gap-3">
-              <button
-                className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
-                onClick={() => setEditModalOpen(false)}
-              >
-                Annuler
-              </button>
-              <button
-                className="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700"
-                onClick={submitEdit}
-              >
-                Enregistrer
-              </button>
-            </div>
           </div>
         </div>
-      </Dialog>
+      </Modal>
     </div>
   );
 };

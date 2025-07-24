@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import { FaArrowLeft } from "react-icons/fa";
 
 const BonDeCommandeView = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [commande, setCommande] = useState(null);
 
   useEffect(() => {
@@ -85,6 +87,17 @@ const BonDeCommandeView = () => {
 
   return (
     <div className="p-10 bg-white rounded-xl shadow-xl max-w-3xl mx-auto mt-10 font-[Inter]">
+      {/* Bouton Retour */}
+      <div className="mb-6">
+        <button
+          onClick={() => navigate('/invoices')}
+          className=" mb-4 px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 shadow"
+        >
+          <FaArrowLeft className="w-4 h-4" />
+          
+        </button>
+      </div>
+
       <h2 className="text-2xl font-bold text-indigo-700 mb-4">
         Bon de Commande - {commande.numeroCommande}
       </h2>

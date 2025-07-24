@@ -1,13 +1,13 @@
 // src/pages/UsersPage.jsx
-import React, { useEffect, useState } from "react";
-import axios from "axios";
-import {
-  FaUserTie, FaUserPlus, FaPen,
-  FaDownload, FaEye, FaEyeSlash, FaTimes
-} from "react-icons/fa";
-import { toast } from "react-toastify";
-import Papa from "papaparse";
+import React, { useState, useEffect } from "react";
+import axios from "../../api/axios";
+import { FaUsers, FaPlus, FaFileCsv, FaTimes, FaEye, FaEyeSlash } from "react-icons/fa";
 import { LuPencil } from "react-icons/lu";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import { CSVLink } from "react-csv";
+import Modal from "../Modal";
+import { SecondaryButton, PrimaryButton } from "../ModalButton";
 
 const UsersPage = () => {
   const [users, setUsers] = useState([]);
@@ -31,7 +31,7 @@ const UsersPage = () => {
   const fetchUsers = async () => {
     try {
       const res = await axios.get(
-        `http://localhost:4000/users${roleFilter !== "all" ? "?role=" + roleFilter : ""}`,
+        `/users${roleFilter !== "all" ? "?role=" + roleFilter : ""}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setUsers(res.data);
@@ -59,7 +59,7 @@ const UsersPage = () => {
       const user = users.find((u) => u.id === id);
       const newStatus = !user.isActive;
       await axios.put(
-        `http://localhost:4000/users/${id}/status`,
+        `/users/${id}/status`,
         { isActive: newStatus },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -69,17 +69,15 @@ const UsersPage = () => {
     }
   };
 
-  const exportCSV = () => {
-    const csv = Papa.unparse(users);
-    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.setAttribute("href", url);
-    link.setAttribute("download", "utilisateurs.csv");
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
+  const csvData = users.map(user => ({
+    Nom: user.nom,
+    Prénom: user.prenom,
+    Email: user.email,
+    Téléphone: user.tel,
+    Adresse: user.adresse,
+    Rôle: user.role === 'admin' ? 'Administrateur' : 'Commercial',
+    Statut: user.isActive ? 'Actif' : 'Inactif'
+  }));
 
   const openEditModal = (user) => {
     setEditMode(true);
@@ -229,12 +227,13 @@ const UsersPage = () => {
             <option value="commercial">Commerciaux</option>
             <option value="admin">Administrateurs</option>
           </select>
-          <button
-            onClick={exportCSV}
-            className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded flex items-center gap-2"
-          >
-            <FaDownload /> Exporter CSV
-          </button>
+                      <CSVLink 
+              data={csvData} 
+              filename="utilisateurs.csv"
+              className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded flex items-center gap-2"
+            >
+              <FaFileCsv /> Exporter CSV
+            </CSVLink>
           <button
             onClick={() => {
               setEditMode(false);
@@ -244,7 +243,7 @@ const UsersPage = () => {
             }}
             className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded flex items-center gap-2"
           >
-            <FaUserPlus /> Ajouter utilisateur
+            <FaPlus /> Ajouter utilisateur
           </button>
         </div>
 
@@ -287,8 +286,8 @@ const UsersPage = () => {
                         onClick={() => toggleStatus(user.id)}
                         className={`px-3 py-1 text-sm rounded-full font-semibold border ${
                           user.isActive
-                            ? "text-green-600 border-green-400 bg-green-100"
-                            : "text-gray-500 border-gray-300 bg-gray-100"
+                            ? "bg-green-100 text-green-700 border border-green-400 hover:bg-green-200"
+                            : "bg-red-100 text-red-700 border border-red-400 hover:bg-red-200"
                         }`}
                       >
                         {user.isActive ? "Active" : "Inactive"}
@@ -358,191 +357,144 @@ const UsersPage = () => {
         </div>
 
         {/* Modal ajout/modif */}
-        {showModal && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white w-full max-w-2xl mx-4 rounded-2xl shadow-2xl max-h-[90vh] flex flex-col">
-              {/* Header fixe */}
-              <div className="p-8 pb-4 border-b border-gray-200">
-                {/* Bouton fermer */}
-                <button
-                  onClick={() => setShowModal(false)}
-                  className="absolute top-4 right-4 text-gray-400 hover:text-red-500 transition-colors"
-                >
-                  <FaTimes size={24} />
-                </button>
-
-                <h3 className="text-2xl font-bold text-indigo-700 pr-8">
-                  {editMode ? "Modifier l'utilisateur" : "Ajouter un utilisateur"}
-                </h3>
+        <Modal
+          isOpen={showModal}
+          onClose={() => setShowModal(false)}
+          title={editMode ? "Modifier l'utilisateur" : "Ajouter un utilisateur"}
+          subtitle={editMode ? "Mettez à jour les informations de l'utilisateur" : "Créez un nouvel utilisateur"}
+          icon={editMode ? LuPencil : FaPlus}
+          maxWidth="max-w-2xl"
+          showCloseButton={true}
+          footer={
+            <>
+              <SecondaryButton onClick={() => setShowModal(false)}>
+                Annuler
+              </SecondaryButton>
+              <PrimaryButton onClick={handleSubmitUser}>
+                {editMode ? "Modifier" : "Ajouter"}
+              </PrimaryButton>
+            </>
+          }
+        >
+          <div className="space-y-6">
+            {errorMessage && (
+              <div className="p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg">
+                <div className="flex items-center gap-2">
+                  <span className="text-red-500">⚠️</span>
+                  <span className="font-medium">{errorMessage}</span>
+                </div>
               </div>
+            )}
 
-              {/* Contenu scrollable */}
-              <div className="flex-1 overflow-y-auto p-8 pt-4">
-                {errorMessage && (
-                  <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg">
-                    <div className="flex items-center gap-2">
-                      <span className="text-red-500">⚠️</span>
-                      <span className="font-medium">{errorMessage}</span>
-                    </div>
-                  </div>
-                )}
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">Nom *</label>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                  <svg className="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
+                  Nom *
+                </label>
+                <input
+                  type="text"
+                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 hover:border-indigo-400"
+                  value={form.nom}
+                  onChange={(e) => setForm({ ...form, nom: e.target.value })}
+                  placeholder="Entrez le nom"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                  <svg className="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
+                  Prénom *
+                </label>
+                <input
+                  type="text"
+                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 hover:border-indigo-400"
+                  value={form.prenom}
+                  onChange={(e) => setForm({ ...form, prenom: e.target.value })}
+                  placeholder="Entrez le prénom"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                  <svg className="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                  </svg>
+                  Email *
+                </label>
+                <input
+                  type="email"
+                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 hover:border-indigo-400"
+                  value={form.email}
+                  onChange={(e) => setForm({ ...form, email: e.target.value })}
+                  placeholder="exemple@email.com"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                  <svg className="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                  </svg>
+                  Téléphone *
+                </label>
+                <input
+                  type="tel"
+                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 hover:border-indigo-400"
+                  placeholder="06 12 34 56 78 ou +33 6 12 34 56 78"
+                  value={form.tel}
+                  onChange={(e) => handlePhoneChange(e.target.value)}
+                />
+                <p className="text-xs text-gray-500 mt-2">
+                  Format accepté : 06 12 34 56 78, +33 6 12 34 56 78
+                </p>
+              </div>
+              <div className="md:col-span-2">
+                <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                  <svg className="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                  Adresse *
+                </label>
+                <input
+                  type="text"
+                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 hover:border-indigo-400"
+                  value={form.adresse}
+                  onChange={(e) => setForm({ ...form, adresse: e.target.value })}
+                  placeholder="Entrez l'adresse complète"
+                />
+              </div>
+              {!editMode && (
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                    <svg className="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                    </svg>
+                    Mot de passe *
+                  </label>
+                  <div className="relative">
                     <input
-                      type="text"
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
-                      value={form.nom}
-                      onChange={(e) => setForm({ ...form, nom: e.target.value })}
-                      placeholder="Entrez le nom"
+                      type={showPassword ? "text" : "password"}
+                      className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 hover:border-indigo-400 pr-12"
+                      value={form.password}
+                      onChange={(e) => setForm({ ...form, password: e.target.value })}
+                      placeholder="Minimum 6 caractères"
                     />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">Prénom *</label>
-                    <input
-                      type="text"
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
-                      value={form.prenom}
-                      onChange={(e) => setForm({ ...form, prenom: e.target.value })}
-                      placeholder="Entrez le prénom"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">Email *</label>
-                    <input
-                      type="email"
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
-                      value={form.email}
-                      onChange={(e) => setForm({ ...form, email: e.target.value })}
-                      placeholder="exemple@email.com"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">Téléphone *</label>
-                    <input
-                      type="tel"
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
-                      placeholder="06 12 34 56 78 ou +33 6 12 34 56 78"
-                      value={form.tel}
-                      onChange={(e) => handlePhoneChange(e.target.value)}
-                    />
-                    <p className="text-xs text-gray-500 mt-2">
-                      Format accepté : 06 12 34 56 78, +33 6 12 34 56 78
-                    </p>
-                  </div>
-                  <div className="md:col-span-2">
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">Adresse *</label>
-                    <input
-                      type="text"
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
-                      value={form.adresse}
-                      onChange={(e) => setForm({ ...form, adresse: e.target.value })}
-                      placeholder="Entrez l'adresse complète"
-                    />
-                  </div>
-                  {!editMode && (
-                    <div className="md:col-span-2">
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">Mot de passe *</label>
-                      <div className="relative">
-                        <input
-                          type={showPassword ? "text" : "password"}
-                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors pr-12"
-                          value={form.password}
-                          onChange={(e) => setForm({ ...form, password: e.target.value })}
-                          placeholder="Minimum 6 caractères"
-                        />
-                        <button
-                          type="button"
-                          className="absolute top-1/2 right-4 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors"
-                          onClick={() => setShowPassword(!showPassword)}
-                        >
-                          {showPassword ? <FaEyeSlash size={18} /> : <FaEye size={18} />}
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                  {editMode && (
-                    <div className="md:col-span-2">
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">Nouveau mot de passe (optionnel)</label>
-                      <div className="relative">
-                        <input
-                          type={showPassword ? "text" : "password"}
-                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors pr-12"
-                          placeholder="Laissez vide pour conserver le mot de passe actuel"
-                          value={form.password}
-                          onChange={(e) => setForm({ ...form, password: e.target.value })}
-                        />
-                        <button
-                          type="button"
-                          className="absolute top-1/2 right-4 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors"
-                          onClick={() => setShowPassword(!showPassword)}
-                        >
-                          {showPassword ? <FaEyeSlash size={18} /> : <FaEye size={18} />}
-                        </button>
-                      </div>
-                      <p className="text-xs text-gray-500 mt-2">
-                        Minimum 6 caractères si vous souhaitez changer le mot de passe
-                      </p>
-                    </div>
-                  )}
-                  <div className="md:col-span-2">
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">Rôle *</label>
-                    <select
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors bg-white"
-                      value={form.role}
-                      onChange={(e) => setForm({ ...form, role: e.target.value })}
+                    <button
+                      type="button"
+                      className="absolute top-1/2 right-4 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors"
+                      onClick={() => setShowPassword(!showPassword)}
                     >
-                      <option value="commercial">Commercial</option>
-                      <option 
-                        value="admin" 
-                        disabled={editMode && users.find(u => u.id === editUserId)?.role === 'commercial'}
-                      >
-                        Administrateur
-                      </option>
-                    </select>
-                    {editMode && users.find(u => u.id === editUserId)?.role === 'commercial' && (
-                      <div className="mt-2 p-3 bg-yellow-50 border border-yellow-200 text-yellow-700 rounded-lg">
-                        <div className="flex items-center gap-2">
-                          <span>⚠️</span>
-                          <span className="text-sm">Un commercial ne peut pas être promu administrateur</span>
-                        </div>
-                      </div>
-                    )}
+                      {showPassword ? <FaEyeSlash size={16} /> : <FaEye size={16} />}
+                    </button>
                   </div>
                 </div>
-              </div>
-
-              {/* Footer fixe avec boutons */}
-              <div className="p-8 pt-4 border-t border-gray-200 bg-gray-50 rounded-b-2xl">
-                <div className="flex justify-end gap-4">
-                  <button
-                    onClick={() => setShowModal(false)}
-                    className="px-6 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium"
-                  >
-                    Annuler
-                  </button>
-                  <button
-                    onClick={handleSubmitUser}
-                    className="px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors font-medium flex items-center gap-2"
-                  >
-                    {editMode ? (
-                      <>
-                        <FaPen size={16} />
-                        Modifier
-                      </>
-                    ) : (
-                      <>
-                        <FaUserPlus size={16} />
-                        Ajouter
-                      </>
-                    )}
-                  </button>
-                </div>
-              </div>
+              )}
             </div>
           </div>
-        )}
+        </Modal>
       </div>
     </div>
   );

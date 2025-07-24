@@ -8,7 +8,7 @@ const typesReponse = [
   { value: "select", label: "Sélection unique (Oui/Non)" },
 ];
 
-const zones = ["Paris", "Nord", "Sud"];
+
 
 const AddSurveyPage = ({ onClose, survey, isEdit }) => {
   const [step, setStep] = useState(1);
@@ -16,7 +16,7 @@ const AddSurveyPage = ({ onClose, survey, isEdit }) => {
   // Ajout d'un état pour la validation des champs
   const [touched, setTouched] = useState({ nom: false, dateDebut: false, dateFin: false });
   // Ajout d'un état pour la validation des champs destinataires
-  const [touchedDest, setTouchedDest] = useState({ zone: false, commercial: false, clients: false });
+  const [touchedDest, setTouchedDest] = useState({ commercial: false, clients: false });
 
   // Étape 1 : Infos enquête
   const [nom, setNom] = useState(survey ? survey.nom : "");
@@ -30,7 +30,6 @@ const AddSurveyPage = ({ onClose, survey, isEdit }) => {
 
   // Étape 3 : Destinataires
   const [commerciaux, setCommerciaux] = useState([]);
-  const [selectedZone, setSelectedZone] = useState("");
   const [selectedCommercial, setSelectedCommercial] = useState("");
   const [clients, setClients] = useState([]);
   const [selectedClients, setSelectedClients] = useState([]);
@@ -39,30 +38,33 @@ const AddSurveyPage = ({ onClose, survey, isEdit }) => {
   const isNomValid = nom.trim() !== '';
   const isDateDebutValid = dateDebut.trim() !== '';
   const isDateFinValid = dateFin.trim() !== '';
-  const isZoneValid = selectedZone.trim() !== '';
+  // Zone n'est plus obligatoire
   const isCommercialValid = selectedCommercial !== '' && selectedCommercial !== null && selectedCommercial !== undefined;
 
   const isClientsValid = selectedClients.length > 0;
 
-  // Charger les commerciaux (avec zone)
+  // Charger les commerciaux
   useEffect(() => {
-    axios.get("/users?role=commercial").then(res => setCommerciaux(res.data));
+    axios.get("/users?role=commercial").then(res => {
+      setCommerciaux(res.data);
+    });
   }, []);
 
-  // Charger les clients du commercial sélectionné
+  // Charger les clients du commercial sélectionné et les sélectionner automatiquement
   useEffect(() => {
     if (selectedCommercial) {
-      axios.get(`/client?commercialId=${selectedCommercial}`).then(res => setClients(res.data));
+      axios.get(`/client?commercialId=${selectedCommercial}`).then(res => {
+        setClients(res.data);
+        // Sélectionner automatiquement tous les clients du commercial
+        setSelectedClients(res.data.map(client => client.id));
+      });
     } else {
       setClients([]);
+      setSelectedClients([]);
     }
   }, [selectedCommercial]);
 
-  // Réinitialiser le commercial sélectionné quand la zone change
-  useEffect(() => {
-    setSelectedCommercial("");
-    setSelectedClients([]);
-  }, [selectedZone]);
+
 
   // Pré-remplir les questions et affectations si édition
   useEffect(() => {
@@ -82,10 +84,8 @@ const AddSurveyPage = ({ onClose, survey, isEdit }) => {
     }
   }, [survey, isEdit]);
 
-  // Filtrer les commerciaux par zone
-  const filteredCommerciaux = selectedZone
-    ? commerciaux.filter(c => c.zone === selectedZone)
-    : commerciaux;
+  // Tous les commerciaux sont disponibles
+  const filteredCommerciaux = commerciaux;
 
   // Ajout d'une question
   const addQuestion = async () => {
@@ -185,16 +185,24 @@ const AddSurveyPage = ({ onClose, survey, isEdit }) => {
             className={`border rounded px-3 py-2 mb-4 w-full ${!isDateFinValid && touched.dateFin ? 'border-red-500' : ''}`}
           />
           {!isDateFinValid && touched.dateFin && <div className="text-red-500 text-sm mb-2">La date de fin est obligatoire</div>}
-          <button
-            className="bg-indigo-600 text-white px-4 py-2 rounded"
-            onClick={() => {
-              setTouched({ nom: true, dateDebut: true, dateFin: true });
-              if (isNomValid && isDateDebutValid && isDateFinValid) setStep(2);
-            }}
-            disabled={false}
-          >
-            Suivant
-          </button>
+          <div className="flex gap-2">
+            <button
+              className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600"
+              onClick={onClose}
+            >
+              Annuler
+            </button>
+            <button
+              className="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700"
+              onClick={() => {
+                setTouched({ nom: true, dateDebut: true, dateFin: true });
+                if (isNomValid && isDateDebutValid && isDateFinValid) setStep(2);
+              }}
+              disabled={false}
+            >
+              Suivant
+            </button>
+          </div>
         </>
       )}
 
@@ -217,89 +225,96 @@ const AddSurveyPage = ({ onClose, survey, isEdit }) => {
               </li>
             ))}
           </ul>
-          <button className="bg-gray-300 px-4 py-2 rounded mr-2" onClick={() => setStep(1)}>Précédent</button>
-          <button className="bg-indigo-600 text-white px-4 py-2 rounded" onClick={() => {
-            if (questions.length < 3) {
-              toast.error('Veuillez ajouter au moins 3 questions pour continuer.');
-              return;
-            }
-            setStep(3);
-          }}>Suivant</button>
+          <div className="flex gap-2">
+            <button className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600" onClick={onClose}>
+              Annuler
+            </button>
+            <button className="bg-gray-300 px-4 py-2 rounded hover:bg-gray-400" onClick={() => setStep(1)}>
+              Précédent
+            </button>
+            <button className="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700" onClick={() => {
+              if (questions.length < 3) {
+                toast.error('Veuillez ajouter au moins 3 questions pour continuer.');
+                return;
+              }
+              setStep(3);
+            }}>
+              Suivant
+            </button>
+          </div>
         </>
       )}
 
-      {/* Étape 3 */}
-      {step === 3 && (
-        <>
-          <h2 className="text-xl font-bold mb-4">Destinataires</h2>
-          <label>Zone</label>
-          <select
-            value={selectedZone}
-            onChange={e => setSelectedZone(e.target.value)}
-            onBlur={() => setTouchedDest(t => ({ ...t, zone: true }))}
-            className={`border rounded px-3 py-2 mb-2 w-full ${!isZoneValid && touchedDest.zone ? 'border-red-500' : ''}`}
-          >
-            <option value="">Toutes</option>
-            {zones.map(z => <option key={z} value={z}>{z}</option>)}
-          </select>
-          {!isZoneValid && touchedDest.zone && <div className="text-red-500 text-sm mb-2">La zone est obligatoire</div>}
-          <label>Commercial</label>
-          <select
-            value={selectedCommercial}
-            onChange={e => setSelectedCommercial(e.target.value)}
-            onBlur={() => setTouchedDest(t => ({ ...t, commercial: true }))}
-            className={`border rounded px-3 py-2 mb-2 w-full ${!isCommercialValid && touchedDest.commercial ? 'border-red-500' : ''}`}
-            disabled={filteredCommerciaux.length === 0}
-          >
-            <option value="">
-              {filteredCommerciaux.length === 0 
-                ? "Aucun commercial disponible pour cette zone" 
-                : "Choisir un commercial"
-              }
-            </option>
-            {filteredCommerciaux.map(c => <option key={c.id} value={String(c.id)}>
-              {c.nom} {c.prenom} {c.zone ? `(${c.zone})` : '(Zone non définie)'}
-            </option>)}
-          </select>
-          {filteredCommerciaux.length === 0 && selectedZone && (
-            <div className="text-orange-600 text-sm mb-2">
-              ⚠️ Aucun commercial n'est assigné à la zone "{selectedZone}". 
-              {selectedZone === "Toutes" ? " Veuillez sélectionner une zone spécifique." : " Veuillez sélectionner une autre zone ou assigner des commerciaux à cette zone."}
-            </div>
-          )}
-          {!isCommercialValid && touchedDest.commercial && filteredCommerciaux.length > 0 && (
-            <div className="text-red-500 text-sm mb-2">Le commercial est obligatoire</div>
-          )}
-          <label>
-            Clients <span className="text-xs text-gray-500">(Ctrl/Cmd + clic pour sélectionner plusieurs)</span>
-          </label>
-          <select
-            multiple
-            value={selectedClients}
-            onChange={e => setSelectedClients([...e.target.selectedOptions].map(o => Number(o.value)))}
-            onBlur={() => setTouchedDest(t => ({ ...t, clients: true }))}
-            className={`border rounded px-3 py-2 mb-4 w-full ${!isClientsValid && touchedDest.clients ? 'border-red-500' : ''}`}
-            size={5}
-          >
-            {clients.map(cl => <option key={cl.id} value={cl.id}>{cl.nom} {cl.prenom}</option>)}
-          </select>
-          {!isClientsValid && touchedDest.clients && <div className="text-red-500 text-sm mb-2">Au moins un client est obligatoire</div>}
-          <button className="bg-gray-300 px-4 py-2 rounded mr-2" onClick={() => setStep(2)}>Précédent</button>
-          <button
-            className="bg-indigo-600 text-white px-4 py-2 rounded"
-            onClick={async () => {
-              setTouchedDest({ zone: true, commercial: true, clients: true });
-              if (!isZoneValid || !isCommercialValid || !isClientsValid) return;
-              
-              // Vérification supplémentaire pour les commerciaux disponibles
-              if (filteredCommerciaux.length === 0) {
-                toast.error("Aucun commercial disponible pour la zone sélectionnée. Veuillez sélectionner une autre zone.");
-                return;
-              }
-              
-              await handleSubmit();
-            }}
-          >Créer l'enquête</button>
+             {/* Étape 3 */}
+       {step === 3 && (
+         <>
+           <h2 className="text-xl font-bold mb-4">Destinataires</h2>
+           <label>Commercial</label>
+           <select
+             value={selectedCommercial}
+             onChange={e => setSelectedCommercial(e.target.value)}
+             onBlur={() => setTouchedDest(t => ({ ...t, commercial: true }))}
+             className={`border rounded px-3 py-2 mb-2 w-full ${!isCommercialValid && touchedDest.commercial ? 'border-red-500' : ''}`}
+             disabled={filteredCommerciaux.length === 0}
+           >
+             <option value="">
+               {filteredCommerciaux.length === 0 
+                 ? "Aucun commercial disponible" 
+                 : "Choisir un commercial"
+               }
+             </option>
+             {filteredCommerciaux.map(c => <option key={c.id} value={String(c.id)}>
+               {c.nom} {c.prenom} {c.zone ? `(${c.zone})` : ''}
+             </option>)}
+           </select>
+           {!isCommercialValid && touchedDest.commercial && filteredCommerciaux.length > 0 && (
+             <div className="text-red-500 text-sm mb-2">Le commercial est obligatoire</div>
+           )}
+                     <label>
+             Clients du commercial sélectionné
+           </label>
+           <div className={`border rounded px-3 py-2 mb-4 w-full min-h-[100px] max-h-[200px] overflow-y-auto ${!isClientsValid && touchedDest.clients ? 'border-red-500' : 'border-gray-300'}`}>
+             {clients.length > 0 ? (
+               <div className="space-y-1">
+                 {clients.map(cl => (
+                   <div key={cl.id} className="flex items-center justify-between py-1 px-2 bg-green-50 rounded">
+                     <span className="text-sm">{cl.nom} {cl.prenom}</span>
+                     <span className="text-xs text-green-600 bg-green-100 px-2 py-1 rounded-full">Sélectionné</span>
+                   </div>
+                 ))}
+               </div>
+             ) : (
+               <div className="text-gray-500 text-sm py-4 text-center">
+                 {selectedCommercial ? "Aucun client trouvé pour ce commercial" : "Sélectionnez un commercial pour voir ses clients"}
+               </div>
+             )}
+           </div>
+           {!isClientsValid && touchedDest.clients && <div className="text-red-500 text-sm mb-2">Le commercial sélectionné doit avoir au moins un client</div>}
+          <div className="flex gap-2">
+            <button className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600" onClick={onClose}>
+              Annuler
+            </button>
+            <button className="bg-gray-300 px-4 py-2 rounded hover:bg-gray-400" onClick={() => setStep(2)}>
+              Précédent
+            </button>
+            <button
+              className="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700"
+              onClick={async () => {
+                setTouchedDest({ commercial: true, clients: true });
+                if (!isCommercialValid || !isClientsValid) return;
+                
+                // Vérification supplémentaire pour les commerciaux disponibles
+                if (filteredCommerciaux.length === 0) {
+                  toast.error("Aucun commercial disponible.");
+                  return;
+                }
+                
+                await handleSubmit();
+              }}
+            >
+              {isEdit ? "Modifier l'enquête" : "Créer l'enquête"}
+            </button>
+          </div>
         </>
       )}
     </div>

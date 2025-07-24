@@ -88,6 +88,7 @@ const promotionsPerPage = 10;
         tauxReduction: parseFloat(newPromo.tauxReduction),
         dateDebut: new Date(newPromo.dateDebut).toISOString(),
         dateFin: new Date(newPromo.dateFin).toISOString(),
+        isActive: true,
       };
 
       await axios.post(`http://localhost:4000/promotions`, payload, {
@@ -169,16 +170,16 @@ const totalPages = Math.ceil(promotions.length / promotionsPerPage);
                   <td className="px-6 py-4">{new Date(promo.dateDebut).toLocaleDateString()}</td>
                   <td className="px-6 py-4">{new Date(promo.dateFin).toLocaleDateString()}</td>
                   <td className="px-6 py-4 text-center">
-                  <button
-                    onClick={() => handleToggleStatus(promo.id)}
-                    className={`px-3 py-1 text-sm font-semibold rounded-full ${
-                      promo.isActive
-                        ? "bg-green-100 text-green-700 border border-green-400 hover:bg-green-200"
-                        : "bg-red-100 text-red-700 border border-red-400 hover:bg-red-200"
-                    }`}
-                  >
-                    {promo.isActive ? "Désactiver" : "Activer"}
-                  </button>
+                              <button
+              onClick={() => handleToggleStatus(promo.id)}
+              className={`px-3 py-1 text-sm font-semibold rounded-full ${
+                promo.isActive
+                  ? "bg-green-100 text-green-700 border border-green-400 hover:bg-green-200"
+                  : "bg-red-100 text-red-700 border border-red-400 hover:bg-red-200"
+              }`}
+            >
+              {promo.isActive ? "Active" : "Inactive"}
+            </button>
                 </td>
                   <td className="px-6 py-4 text-center">
                     <button

@@ -56,10 +56,10 @@ const Navbar = () => {
 
   return (
     <nav className="bg-slate-100 border-b border-gray-300 shadow-sm">
-      <div className="max-w-full px-4 sm:px-6">
+      <div className="max-w-full px-4 sm:px-8">
         {/* Menu burger pour mobile */}
-        <div className="lg:hidden flex items-center justify-between h-14">
-          <span className="font-bold text-lg text-gray-800">Menu</span>
+        <div className="lg:hidden flex items-center justify-between h-17">
+          <span className="font-bold text-lg text-gray-1000">Menu</span>
           <button 
             onClick={() => setMobileOpen((v) => !v)} 
             className="p-2 rounded-md hover:bg-gray-200 transition-colors"
