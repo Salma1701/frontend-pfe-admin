@@ -256,7 +256,13 @@ const toggleClientStatus = async (id, currentStatus) => {
       console.error("❌ Erreur mise à jour client:", err.response?.data);
       
       // Afficher les erreurs du serveur
-      if (err.response?.data?.message) {
+      if (err.response?.status === 409) {
+        // Erreur de conflit (SIRET en double)
+        setEditErrors({
+          codeFiscale: "Ce numéro SIRET existe déjà dans la base de données"
+        });
+        toast.error("❌ Ce numéro SIRET existe déjà");
+      } else if (err.response?.data?.message) {
         const serverErrors = {};
         const messages = Array.isArray(err.response.data.message) 
           ? err.response.data.message 
@@ -277,6 +283,8 @@ const toggleClientStatus = async (id, currentStatus) => {
             serverErrors.adresse = msg;
           } else if (msg.includes('codeFiscale')) {
             serverErrors.codeFiscale = msg;
+          } else if (msg.includes('SIRET existe déjà')) {
+            serverErrors.codeFiscale = "Ce numéro SIRET existe déjà dans la base de données";
           } else {
             // Erreur générale
             toast.error(`❌ ${msg}`);
