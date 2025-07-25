@@ -90,12 +90,12 @@ const ClientsPage = () => {
   }
 
   if (term !== "") {
-    const lowered = term.toLowerCase();
+    const searchTermLower = term.toLowerCase();
     result = result.filter(
       (c) =>
-        c.nom.toLowerCase().includes(lowered) ||
-        c.prenom.toLowerCase().includes(lowered) ||
-        c.categorie?.nom.toLowerCase().includes(lowered)
+        c.nom.toLowerCase().includes(searchTermLower) ||
+        c.prenom.toLowerCase().includes(searchTermLower) ||
+        (c.categorie?.nom && c.categorie.nom.toLowerCase().includes(searchTermLower))
     );
   }
 
@@ -227,7 +227,9 @@ const toggleClientStatus = async (id, currentStatus) => {
         telephone: editForm.telephone.replace(/\s+/g, '')
       };
 
-      await axios.put(
+      console.log('🔄 Mise à jour du client:', submitData);
+
+      const response = await axios.put(
         `/client/${selectedClient.id}`,
         submitData,
         {
@@ -237,12 +239,21 @@ const toggleClientStatus = async (id, currentStatus) => {
           },
         }
       );
+
+      console.log('✅ Réponse du serveur:', response.data);
+
       setEditModalOpen(false);
       setEditErrors({});
-      fetchClients();
+      
+      // Recharger les clients pour voir les modifications
+      await fetchClients();
+      
+      // Appliquer les filtres actuels après le rechargement
+      applyFilters(selectedCommercial, selectedCategory, searchTerm);
+      
       toast.success("✅ Client modifié avec succès");
     } catch (err) {
-      console.error("Erreur mise à jour client:", err.response?.data);
+      console.error("❌ Erreur mise à jour client:", err.response?.data);
       
       // Afficher les erreurs du serveur
       if (err.response?.data?.message) {
